@@ -1,133 +1,220 @@
 # DevTool — Canivete Suíço para Desenvolvimento
 
-App desktop (Tauri 2 + React + TypeScript) que reúne utilidades do dia a dia:
-formatadores, encoders/cripto, consultas a APIs públicas brasileiras e
-utilidades de texto — tudo offline, exceto as consultas online.
+Aplicativo **desktop** que junta num só lugar as utilidades que a gente sempre
+acaba procurando em cinco abas diferentes (e no Postman): formatadores, encoders,
+cripto, consultas a APIs públicas brasileiras, ferramentas de rede e de texto.
+**30 ferramentas**, janela nativa leve (Tauri), sem Electron e sem servidor.
 
-## Rodando
+## 100% offline
 
-```bash
-npm install
-npm run tauri dev     # abre a janela do app com hot-reload
-```
+Todo o código e os assets — fontes (Inter, JetBrains Mono), Mermaid, highlight.js,
+etc. — são **empacotados dentro do binário**. Nada é baixado da internet em tempo
+de execução; o carregamento sob demanda (ex.: a ferramenta de Markdown) lê
+arquivos locais, não a rede. Uma **CSP restritiva** em `src-tauri/tauri.conf.json`
+(`default-src 'self'; script-src 'self'; connect-src 'self' …`) proíbe qualquer
+script, estilo ou conexão externa.
 
-Outros scripts:
+As poucas ferramentas que **precisam** de rede para funcionar — CEP, CNPJ, DDD,
+Bancos, Feriados, cURL/HTTP, API Client — fazem as requisições pelo **backend
+Rust** (não pelo `fetch` da webview) e exibem um selo verde **"Conexão com
+internet necessária"** no cabeçalho, além de um ícone de Wi-Fi na barra lateral.
 
-| Comando             | O que faz                                        |
-| ------------------- | ------------------------------------------------ |
-| `npm run dev`       | só o front-end no navegador (sem recursos Tauri) |
-| `npm run test`      | testes unitários das funções puras (`src/lib`)   |
-| `npm run typecheck` | `tsc --noEmit`                                    |
-| `npm run build`     | build de produção do front-end                   |
-| `npm run tauri dev` | app completo em modo desenvolvimento             |
+## Linguagens & tecnologias
+
+| Camada | Linguagem / ferramenta | Observações |
+| --- | --- | --- |
+| **Interface e lógica** | **TypeScript** (~8,5k linhas) + **React 19** | Toda a aplicação: UI, lógica das ferramentas e testes. `tsc --noEmit` sem erros. |
+| Estilo | **CSS** + **Tailwind CSS v4** | Sistema de _design tokens_ (claro/escuro) em `src/styles.css`. |
+| Editor de código | **CodeMirror 6** | Painéis de JSON/XML/YAML. |
+| **Shell nativo** | **Rust** (edition 2021) — **~18 linhas** | Só registra os plugins do Tauri; nenhuma lógica de negócio no backend. |
+| Runtime desktop | **Tauri 2** | WebView do sistema (WebKitGTK no Linux) — binário de ~25 MB. |
+| Build / dev server | **Vite 7** | |
+| Testes | **Vitest** | 136 testes sobre as funções puras de `src/lib`. |
+| Ícones | **lucide-react** | |
+| CI/CD | **YAML** (GitHub Actions) + **semantic-release** (Node) | |
+
+Bibliotecas de apoio: `marked` + `DOMPurify` + `mermaid` + `highlight.js`
+(Markdown), `fast-xml-parser`/`xml-formatter`, `yaml`, `date-fns`, `diff`,
+`cronstrue`/`cron-parser`, `bcryptjs`, `spark-md5`, `uuid`.
 
 ## Ferramentas
 
-- **Formatadores:** JSON (formatar/minificar/validar/ordenar chaves), XML, YAML,
-  e conversor JSON ↔ YAML ↔ XML.
-- **Encoders & Cripto:** Base64 (texto e arquivo, UTF-8/URL-safe), URL &
-  query string, JWT (decodificar + verificar HMAC), Hashes (MD5/SHA-1/256/384/512),
-  UUID (v1/v4/v5/v7), Senha & bcrypt.
-- **Sistemas & Rede:** Cron (explicar + próximas execuções), chmod/permissões
-  (octal ↔ simbólico, bits especiais, umask), CIDR/sub-rede (IPv4),
-  cURL/HTTP (analisar comando, converter para fetch/HTTPie/wget/PowerShell,
-  e disparar), **API Client** (cliente HTTP tipo Postman: método/URL, params,
-  headers, body JSON/texto/form, auth Bearer/Basic/API-key, requests salvos,
-  histórico e variáveis `{{...}}`; importa e exporta cURL).
-- **Consultas BR:** CEP (ViaCEP + fallback BrasilAPI), CNPJ, DDD, Bancos,
-  Feriados, CPF/CNPJ (validar e gerar offline), PIX Copia e Cola (gerar/decodificar).
-- **Texto & Cores:** Diff, Regex, Conversor de case, Epoch ↔ Data, Base numérica,
-  Lorem Ipsum, Cor & Contraste (hex/rgb/hsl/hsv + WCAG).
+| Categoria | Ferramentas |
+| --- | --- |
+| **Formatadores** | JSON (formatar/minificar/validar/ordenar chaves), XML, YAML, Conversor JSON ↔ YAML ↔ XML |
+| **Encoders & Cripto** | Base64 (texto e arquivo, UTF-8/URL-safe), URL & Query String, JWT (decodificar + verificar HMAC), Hashes (MD5/SHA-1/256/384/512), UUID (v1/v4/v5/v7), Senha & bcrypt |
+| **Sistemas & Rede** | Cron (explicar + próximas execuções), chmod / permissões (octal ↔ simbólico, bits especiais, umask), CIDR / Sub-rede (IPv4), **cURL / HTTP**¹ (analisar comando, converter para fetch/HTTPie/wget/PowerShell, disparar), **API Client**¹ (cliente HTTP tipo Postman: params, headers, body, auth, requests salvos, histórico, variáveis `{{…}}`) |
+| **Consultas BR** | **CEP**¹ (ViaCEP + fallback BrasilAPI), **CNPJ**¹, **DDD**¹, **Bancos**¹, **Feriados**¹, CPF / CNPJ (validar e gerar, offline), PIX Copia e Cola (gerar/decodificar o BR Code EMV) |
+| **Texto & Cores** | Diff de texto, Regex (grupos, flags, presets), Conversor de case, Epoch ↔ Data (com fuso), Base numérica (bin/oct/dec/hex, BigInt), Lorem Ipsum, Cor & Contraste (hex/rgb/hsl/hsv + WCAG), **Markdown Preview** (GFM, realce de código, diagramas Mermaid — carregado sob demanda) |
 
-Atalhos e conveniências:
+¹ Precisa de conexão com a internet.
 
-- `Ctrl+K` foca a busca da barra lateral.
+## Como usar
+
+### Pré-requisitos
+
+- **Node.js 20+** (testado com 24) e npm
+- **Rust** estável (`rustup`) — testado com 1.98
+- **Dependências de sistema do Tauri** (Linux):
+  - Arch / EndeavourOS: `sudo pacman -S --needed webkit2gtk-4.1 libsoup3 base-devel curl wget file openssl librsvg libappindicator-gtk3 xdotool`
+  - Debian / Ubuntu: `sudo apt install libwebkit2gtk-4.1-dev libsoup-3.0-dev librsvg2-dev libappindicator3-dev libxdo-dev patchelf build-essential curl wget file libssl-dev`
+
+### Desenvolvimento
+
+```bash
+npm install
+npm run tauri dev      # abre a janela do app com hot-reload
+```
+
+### Build
+
+```bash
+npm run tauri build                 # instaladores da plataforma atual
+npm run tauri build -- --no-bundle  # só o executável
+```
+
+Saída em `src-tauri/target/release/` (executável) e
+`src-tauri/target/release/bundle/` (`.AppImage`/`.deb`/`.rpm` no Linux,
+`.msi`/`.exe` no Windows, `.dmg` no macOS). `identifier` e ícones em
+`src-tauri/tauri.conf.json`.
+
+### Scripts npm
+
+| Comando | O que faz |
+| --- | --- |
+| `npm run tauri dev` | app completo, hot-reload |
+| `npm run dev` | só o front-end no navegador (sem recursos nativos) |
+| `npm run build` | build de produção do front-end (`tsc` + `vite build`) |
+| `npm run test` | testes unitários (Vitest) |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run check` | `typecheck` + `test` |
+| `npm run set-version <x.y.z>` | sincroniza a versão nos arquivos do Rust/Tauri |
+| `npm run release:dry` | prévia do próximo release (semantic-release, sem publicar) |
+
+## Recursos da interface
+
+- **`Ctrl+K`** foca a busca da barra lateral.
+- **Categorias retráteis:** clique no título para recolher/expandir (mostra um
+  contador quando recolhida); "recolher tudo / expandir tudo" no topo. O estado é
+  salvo; a categoria da ferramenta ativa abre sozinha; durante uma busca, tudo
+  fica expandido.
 - **UI redimensionável:** divisórias arrastáveis entre a barra lateral e o
   conteúdo, entre entrada/saída das ferramentas e (no API Client) entre
-  requisição/resposta. Duplo-clique na divisória restaura. Os tamanhos ficam
-  salvos (`devtool:split:*`). `<textarea>` livres têm alça de resize vertical.
-- **Detecção da área de transferência:** ao focar a janela (ou pelo botão na barra
-  lateral), o app olha o clipboard e sugere a ferramenta certa — JWT, JSON, cor,
-  CIDR, cron, CPF/CNPJ, PIX, UUID, etc.
-- **Tamanho/posição da janela** são lembrados entre sessões (`window-state`).
+  requisição/resposta. Duplo-clique restaura. Tamanhos persistidos.
+- **Detecção da área de transferência:** ao focar a janela (ou pelo botão na
+  barra lateral), o app olha o clipboard e sugere a ferramenta certa — JWT, JSON,
+  cor, CIDR, cron, CPF/CNPJ, PIX, UUID, URL, timestamp, Base64, comando `curl`.
+- **Configurações:** tema **Claro / Escuro / Sistema**, restaurar tamanhos de
+  painéis, limpar dados salvos.
+- **Sobre:** dados do desenvolvedor e da stack.
+- **Persistência local:** última ferramenta, rascunho de cada ferramenta,
+  tamanho/posição da janela, requests e variáveis do API Client — tudo em
+  `localStorage`, só nesta máquina.
 
 ## Arquitetura
 
 ```
 src/
-  lib/         funções puras, sem React, cobertas por testes (*.test.ts)
-  hooks/       useLocalStorage, useToolDraft, useTextTransform, useDark
-  components/  AppShell (App.tsx), Sidebar, TransformTool, ApiTool, ui/
+  lib/          funções PURAS (sem React), 1:1 com um teste (*.test.ts)
+  hooks/        useLocalStorage, useToolDraft, useTextTransform, useTheme, …
+  components/
+    App.tsx        shell: barra lateral + cabeçalho + painel da ferramenta
+    Sidebar.tsx    busca, categorias retráteis, footer (Config./Sobre)
+    TransformTool  layout genérico entrada→saída
+    ApiTool        layout genérico de consulta online
+    SplitPane      divisória arrastável reutilizável
+    ui/            Button, Select, Segmented, CodeArea, Toast, …
   tools/
-    types.ts     interface Tool { id, name, category, blurb, keywords, Component }
-    registry.ts  lista única de ferramentas
-    *.tsx        um módulo por ferramenta
-src-tauri/     backend Rust (só registra plugins: http, clipboard, dialog, os,
-               window-state)
+    types.ts       interface Tool { id, name, category, blurb, keywords,
+                                     icon, needsInternet?, Component }
+    registry.ts    lista única — a fonte da verdade das ferramentas
+    *.tsx          um módulo por ferramenta
+src-tauri/         shell Rust: registra plugins (http, clipboard-manager,
+                   dialog, os, window-state, opener) + CSP. Sem comandos custom.
+scripts/          set-version.mjs (usado pelo release)
+.github/workflows ci.yml, release.yml
 ```
+
+**Princípio central:** toda lógica não-trivial vive em `src/lib/*.ts` como função
+pura, com teste. Os arquivos em `src/tools/*.tsx` são só a "casca" de UI —
+geralmente uma chamada a `<TransformTool>` (entrada→saída) ou `<ApiTool>`
+(consulta online).
 
 ### Adicionar uma ferramenta
 
-1. Crie a lógica pura em `src/lib/minha-coisa.ts` (+ `minha-coisa.test.ts`).
-2. Crie o componente em `src/tools/minha-coisa.tsx` — geralmente basta embrulhar
-   `<TransformTool>` (entrada→saída) ou `<ApiTool>` (consulta online).
-3. Registre em `src/tools/registry.ts`.
+1. Lógica pura em `src/lib/minha-coisa.ts` (+ `minha-coisa.test.ts`).
+2. Componente em `src/tools/minha-coisa.tsx` (embrulhe `<TransformTool>` ou
+   `<ApiTool>` quando der).
+3. Registre em `src/tools/registry.ts` (id, nome, categoria, `icon`, e
+   `needsInternet: true` se fizer requisições).
 
-As chamadas HTTP passam por `src/lib/http.ts`, que usa o plugin HTTP do Tauri
-(sem limites de CORS) e cai no `fetch` do navegador quando rodando fora do app.
+### Rede
 
-## Empacotamento
+Chamadas HTTP passam por `src/lib/http.ts`, que usa o **plugin HTTP do Tauri**
+(feito em Rust, sem limites de CORS) e cai no `fetch` do navegador só quando
+rodando fora do app (`npm run dev`). No app empacotado, o `fetch` da webview
+nunca alcança a internet — a CSP bloqueia.
 
-`npm run tauri build` gera os instaladores da plataforma atual
-(`src-tauri/target/release/bundle/`); `--no-bundle` gera só o executável. O
-`identifier` e os ícones estão em `src-tauri/tauri.conf.json`.
+## Testes
+
+```bash
+npm run test
+```
+
+136 testes (Vitest) cobrindo as funções puras de `src/lib`: parsing/serialização,
+dígitos verificadores de CPF/CNPJ, CRC16 do PIX, conversão de bases, cálculo de
+sub-rede, contraste WCAG, sanitização do Markdown (ambiente jsdom), etc.
 
 ## CI/CD
 
 **GitHub é a fonte da verdade; o Forgejo é um espelho (pull-mirror).**
 
-| Workflow                    | Gatilho                | O que faz                                                                                        |
-| --------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------- |
-| `.github/workflows/ci.yml`  | push em `main`, PRs    | `commitlint` (só PR), `typecheck` + `test` + `build`, e `rustfmt` + `clippy -D warnings` + `cargo test` |
-| `.github/workflows/release.yml` | push em `main`     | `semantic-release` decide a versão pelos commits, atualiza os 4 arquivos de versão, gera `CHANGELOG.md`, cria a tag `vX.Y.Z` e o Release; depois compila os bundles Tauri (Linux `.AppImage/.deb/.rpm`, Windows `.msi/.exe`, macOS `.dmg` universal) e anexa ao Release |
+| Workflow | Gatilho | O que faz |
+| --- | --- | --- |
+| `.github/workflows/ci.yml` | push em `main`, PRs | `commitlint` (só PR); `typecheck` + `test` + `build`; `rustfmt` + `clippy -D warnings` + `cargo test` |
+| `.github/workflows/release.yml` | push em `main` | `semantic-release` calcula a versão pelos commits, atualiza os 4 arquivos de versão, gera `CHANGELOG.md`, cria a tag `vX.Y.Z` e o Release; depois compila os bundles Tauri (Linux `.AppImage/.deb/.rpm`, Windows `.msi/.exe`, macOS `.dmg` universal) e anexa ao Release |
 
-### Versionamento (semantic-release + Conventional Commits)
+### Versionamento — semantic-release + Conventional Commits
 
-A versão sai das mensagens de commit — nada de bump manual:
+A versão sai das mensagens de commit; não há bump manual:
 
-| Prefixo do commit                    | Efeito         |
-| ------------------------------------ | -------------- |
-| `fix:` / `perf:`                     | patch (x.y.**z**) |
-| `feat:`                              | minor (x.**y**.0) |
+| Prefixo do commit | Efeito |
+| --- | --- |
+| `fix:` / `perf:` | patch (x.y.**z**) |
+| `feat:` | minor (x.**y**.0) |
 | `feat!:` ou `BREAKING CHANGE:` no corpo | major (**x**.0.0) |
 | `chore:` `docs:` `refactor:` `test:` `ci:` `build:` `style:` | sem release |
 
 `node scripts/set-version.mjs <x.y.z>` sincroniza `Cargo.toml`, `Cargo.lock` e
-`tauri.conf.json` (o `package.json` é cuidado pelo `@semantic-release/npm`).
-`npm run release:dry` mostra o que sairia, sem publicar.
+`tauri.conf.json`; o `package.json` é cuidado pelo `@semantic-release/npm`.
+`npm run release:dry` mostra o que sairia sem publicar.
 
 > **Primeiro release:** por padrão o semantic-release começa em `1.0.0`. Para
 > continuar de `0.x`, crie a tag `v0.1.0` no commit inicial **antes** de habilitar
 > o workflow: `git tag v0.1.0 && git push origin v0.1.0`.
 
-### Subir pro GitHub (conta pessoal)
-
-O repositório ainda não tem remote. Use sua conta pessoal (`cassianod2`):
+### Publicar no GitHub
 
 ```bash
-git config user.name  "Cassiano Mesquita"
-git config user.email "cassianomesquita@hotmail.com"   # já feito localmente
 gh auth switch --user cassianod2      # ou: gh auth login
 gh repo create cassianod2/devtool --public --source=. --remote=origin --push
 ```
 
-Se `main` tiver branch protection, permita o `github-actions[bot]` fazer bypass
-(o `@semantic-release/git` precisa dar push do commit de release) **ou** troque o
-`GITHUB_TOKEN` do workflow `version` por um PAT fine-grained em `secrets.GH_TOKEN`.
+Se `main` tiver _branch protection_, permita o `github-actions[bot]` no bypass (o
+`@semantic-release/git` precisa dar push do commit de release) **ou** troque o
+`GITHUB_TOKEN` do workflow `version` por um PAT fine-grained em
+`secrets.GH_TOKEN`.
 
 ### Espelho no Forgejo
 
-Na UI do Forgejo: **+ → New Migration → Git** → cole
-`https://github.com/cassianod2/devtool` → marque **"This repository will be a
-mirror"** → intervalo (ex.: `10m`). O Forgejo passa a puxar sozinho; não precisa
-de token nem workflow do lado do Forgejo.
+Na UI: **+ → New Migration → Git** → cole a URL do GitHub → marque **"This
+repository will be a mirror"** → intervalo (ex.: `10m`). O Forgejo passa a puxar
+sozinho; não precisa de token nem workflow do lado do Forgejo.
+
+## Licença
+
+Ainda não definida — adicione um arquivo `LICENSE` (ex.: MIT) antes de divulgar.
+
+---
+
+Feito por **Cassiano Mesquita** · [github.com/cassianod2](https://github.com/cassianod2) · [cassianomesquita.dev](https://cassianomesquita.dev)
