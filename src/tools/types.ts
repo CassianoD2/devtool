@@ -1,4 +1,4 @@
-import type { ComponentType } from "react";
+import type { ComponentType, LazyExoticComponent } from "react";
 import type { LucideIcon } from "lucide-react";
 import { Braces, Flag, KeyRound, Network, Type } from "lucide-react";
 
@@ -42,5 +42,5 @@ export interface Tool {
   /** extra search terms */
   keywords: string[];
   icon: LucideIcon;
-  Component: ComponentType;
+  Component: ComponentType | LazyExoticComponent<ComponentType>;
 }

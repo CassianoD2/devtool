@@ -1,5 +1,6 @@
+import { lazy } from "react";
 import type { Tool } from "./types";
-import { ArrowLeftRight, Binary, Braces, Building2, Calculator, CalendarDays, CaseSensitive, Clock, Code, FileCode2, Fingerprint, GitCompare, Hash, IdCard, KeyRound, Landmark, Link2, LockKeyhole, MapPin, Network, Palette, Phone, QrCode, Regex, Send, ShieldCheck, Terminal, Timer, Type } from "lucide-react";
+import { ArrowLeftRight, Binary, Braces, Building2, Calculator, CalendarDays, CaseSensitive, Clock, Code, FileCode2, FileText, Fingerprint, GitCompare, Hash, IdCard, KeyRound, Landmark, Link2, LockKeyhole, MapPin, Network, Palette, Phone, QrCode, Regex, Send, ShieldCheck, Terminal, Timer, Type } from "lucide-react";
 import { JsonFormatter } from "./json-formatter";
 import { XmlFormatter } from "./xml-formatter";
 import { YamlFormatter } from "./yaml-formatter";
@@ -25,6 +26,12 @@ import { CidrTool } from "./cidr-tool";
 import { ColorTool } from "./color-tool";
 import { CurlTool } from "./curl-tool";
 import { ApiClient } from "./api-client";
+
+// Carregado sob demanda: marked + DOMPurify + mermaid + highlight.js são pesados
+// e só interessam a quem abre esta ferramenta.
+const MarkdownTool = lazy(() =>
+  import("./markdown-tool").then((m) => ({ default: m.MarkdownTool })),
+);
 
 export const TOOLS: Tool[] = [
   {
@@ -287,6 +294,15 @@ export const TOOLS: Tool[] = [
     blurb: "hex ↔ rgb ↔ hsl ↔ hsv e contraste WCAG",
     keywords: ["cor", "color", "hex", "rgb", "hsl", "contraste", "wcag", "acessibilidade"],
     Component: ColorTool,
+  },
+  {
+    id: "markdown",
+    icon: FileText,
+    name: "Markdown Preview",
+    category: "text",
+    blurb: "Renderiza Markdown (GFM) com Mermaid e realce de código",
+    keywords: ["markdown", "md", "gfm", "mermaid", "diagrama", "preview", "readme", "highlight"],
+    Component: MarkdownTool,
   },
 ];
 

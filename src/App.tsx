@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { ClipboardPaste, X } from "lucide-react";
 import { About } from "./components/About";
 import { Settings } from "./components/Settings";
@@ -97,7 +97,15 @@ function App() {
       )}
 
       <div className="min-h-0 flex-1 overflow-hidden p-6">
-        <active.Component key={`${active.id}:${nonce}`} />
+        <Suspense
+          fallback={
+            <div className="grid h-full place-items-center text-sm text-faint">
+              Carregando…
+            </div>
+          }
+        >
+          <active.Component key={`${active.id}:${nonce}`} />
+        </Suspense>
       </div>
     </main>
   );
