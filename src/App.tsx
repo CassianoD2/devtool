@@ -1,23 +1,23 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ClipboardPaste, X } from "lucide-react";
 import { About } from "./components/About";
+import { Settings } from "./components/Settings";
 import { Sidebar } from "./components/Sidebar";
 import { SplitPane } from "./components/ui/SplitPane";
 import { ToastProvider } from "./components/ui/Toast";
 import { Button } from "./components/ui/primitives";
 import { CATEGORY_LABELS } from "./tools/types";
-import { useDark } from "./hooks/useDark";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import { useClipboardDetect } from "./hooks/useClipboardDetect";
 import type { Suggestion } from "./lib/detect";
 import { TOOLS, TOOLS_BY_ID } from "./tools/registry";
 
 function App() {
-  useDark();
   const [activeId, setActiveId] = useLocalStorage("devtool:active", TOOLS[0].id);
   const [query, setQuery] = useState("");
   const [nonce, setNonce] = useState(0);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const { hit, check, dismiss } = useClipboardDetect();
 
@@ -121,11 +121,13 @@ function App() {
               onQueryChange={setQuery}
               onDetectClipboard={() => check(true)}
               onAbout={() => setAboutOpen(true)}
+              onSettings={() => setSettingsOpen(true)}
             />
           }
           second={mainPane}
         />
       </div>
+      <Settings open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <About open={aboutOpen} onClose={() => setAboutOpen(false)} />
     </ToastProvider>
   );
