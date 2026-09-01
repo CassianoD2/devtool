@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/cassianod2/devtool/compare/v1.0.0...v1.0.1) (2026-09-01)
+
+
+### Bug Fixes
+
+* **linux:** janela em branco nos builds portáteis (AppImage/.tar.gz) ([4667f6e](https://github.com/cassianod2/devtool/commit/4667f6e5c54be6488a0a95c24e51fc7bec9c244d))
+
 # 1.0.0 (2026-09-01)
 
 
