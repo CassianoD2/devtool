@@ -2,70 +2,74 @@
 @import "@fontsource-variable/inter";
 @import "@fontsource-variable/jetbrains-mono";
 
-/* Drive `dark:` utilities off a class on <html> that useDark() keeps in sync
-   with the OS `prefers-color-scheme`. */
+/* `dark:` utilities key off an explicit class that <ThemeProvider> puts on <html>. */
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   --font-sans: "Inter Variable", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: "JetBrains Mono Variable", ui-monospace, "Fira Code", "SF Mono", monospace;
 
-  /* semantic surface + text tokens (see overrides below for dark) */
-  --color-bg: #fafafa;
-  --color-surface: #ffffff;
-  --color-surface-2: #f4f4f5;
-  --color-inset: #f4f4f5;
-  --color-line: #e6e6e9;
-  --color-line-strong: #d9d9de;
-  --color-ink: #18181b;
-  --color-muted: #6c6c76;
-  --color-faint: #9a9aa4;
+  /* ---- LIGHT (default) ------------------------------------------------ */
+  --color-bg: #f4f4f6; /* app backdrop */
+  --color-surface: #ffffff; /* main content, cards */
+  --color-surface-2: #ededf1; /* sidebar, raised controls, hovers */
+  --color-inset: #e4e4ea; /* segmented track, code insets */
+  --color-line: #dcdce2; /* hairlines / card borders */
+  --color-line-strong: #c3c3cd; /* control borders, dividers */
+  --color-ink: #16161a;
+  --color-muted: #5c5c67;
+  --color-faint: #8f8f9c;
   --color-accent: #4f46e5;
   --color-accent-hover: #4338ca;
   --color-accent-fg: #ffffff;
-  --color-accent-soft: #eef2ff;
-  --color-accent-soft-fg: #4338ca;
+  --color-accent-soft: #ebeafe;
+  --color-accent-soft-fg: #3730a3;
 }
 
 :root {
   color-scheme: light;
 }
 
-.dark {
+/* ---- DARK ----------------------------------------------------------------
+   Layered on purpose so controls never melt into the background:
+   bg (#0c0c0f)  <  surface (#1a1a1f)  <  surface-2 / controls (#26262d)
+   with clearly visible lines (#3a3a43 / #4d4d59).                          */
+:root.dark {
   color-scheme: dark;
-  --color-bg: #0a0a0b;
-  --color-surface: #141416;
-  --color-surface-2: #202024;
-  --color-inset: #101012;
-  --color-line: #26262b;
-  --color-line-strong: #35353c;
-  --color-ink: #f2f2f3;
-  --color-muted: #9b9ba5;
-  --color-faint: #6a6a74;
-  --color-accent: #6366f1;
-  --color-accent-hover: #818cf8;
-  --color-accent-fg: #ffffff;
-  --color-accent-soft: color-mix(in oklab, #6366f1 18%, transparent);
-  --color-accent-soft-fg: #a5b4fc;
+  --color-bg: #0c0c0f;
+  --color-surface: #1a1a1f;
+  --color-surface-2: #26262d;
+  --color-inset: #101013;
+  --color-line: #3a3a43;
+  --color-line-strong: #4d4d59;
+  --color-ink: #f3f3f6;
+  --color-muted: #adadb8;
+  --color-faint: #74747f;
+  --color-accent: #7c83ff;
+  --color-accent-hover: #969bff;
+  --color-accent-fg: #0c0c0f;
+  --color-accent-soft: color-mix(in oklab, #7c83ff 22%, transparent);
+  --color-accent-soft-fg: #cfd1ff;
 }
 
+/* Pre-JS fallback for viewers before <ThemeProvider> stamps a class. */
 @media (prefers-color-scheme: dark) {
-  :root:not(.light) {
+  :root:not(.light):not(.dark) {
     color-scheme: dark;
-    --color-bg: #0a0a0b;
-    --color-surface: #141416;
-    --color-surface-2: #202024;
-    --color-inset: #101012;
-    --color-line: #26262b;
-    --color-line-strong: #35353c;
-    --color-ink: #f2f2f3;
-    --color-muted: #9b9ba5;
-    --color-faint: #6a6a74;
-    --color-accent: #6366f1;
-    --color-accent-hover: #818cf8;
-    --color-accent-fg: #ffffff;
-    --color-accent-soft: color-mix(in oklab, #6366f1 18%, transparent);
-    --color-accent-soft-fg: #a5b4fc;
+    --color-bg: #0c0c0f;
+    --color-surface: #1a1a1f;
+    --color-surface-2: #26262d;
+    --color-inset: #101013;
+    --color-line: #3a3a43;
+    --color-line-strong: #4d4d59;
+    --color-ink: #f3f3f6;
+    --color-muted: #adadb8;
+    --color-faint: #74747f;
+    --color-accent: #7c83ff;
+    --color-accent-hover: #969bff;
+    --color-accent-fg: #0c0c0f;
+    --color-accent-soft: color-mix(in oklab, #7c83ff 22%, transparent);
+    --color-accent-soft-fg: #cfd1ff;
   }
 }
 
@@ -86,10 +90,9 @@ body {
 }
 
 ::selection {
-  background: color-mix(in oklab, var(--color-accent) 28%, transparent);
+  background: color-mix(in oklab, var(--color-accent) 30%, transparent);
 }
 
-/* thin, theme-aware scrollbars */
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--color-line-strong) transparent;
@@ -109,14 +112,22 @@ body {
   background-clip: content-box;
 }
 
-/* keyboard focus ring, consistent everywhere */
 :where(button, a, input, select, textarea, [tabindex]):focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 1px;
   border-radius: 4px;
 }
 
-/* CodeMirror: fill container, own font, quiet gutters */
+/* WebKitGTK defaults <button> to a text cursor in some builds — force the
+   hand cursor everywhere something is actually clickable, so controls read
+   as controls instead of merging into surrounding text. */
+:where(button, summary, [role="button"], label:has(> input[type="checkbox"])):not(:disabled) {
+  cursor: pointer;
+}
+:where(button, [role="button"]):disabled {
+  cursor: not-allowed;
+}
+
 .cm-editor {
   height: 100%;
   background: transparent;
@@ -136,5 +147,26 @@ body {
 }
 .cm-editor .cm-activeLine,
 .cm-editor .cm-activeLineGutter {
-  background: color-mix(in oklab, var(--color-accent) 7%, transparent);
+  background: color-mix(in oklab, var(--color-accent) 8%, transparent);
+}
+
+@keyframes about {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes toast {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }

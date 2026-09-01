@@ -1,23 +1,6 @@
-import { useEffect, useState } from "react";
+import { useTheme } from "./useTheme";
 
-/** Tracks the OS colour-scheme preference and mirrors it onto <html class="dark">. */
+/** Back-compat shim — the resolved dark flag now comes from <ThemeProvider>. */
 export function useDark(): boolean {
-  const [dark, setDark] = useState(
-    () =>
-      typeof window !== "undefined" &&
-      window.matchMedia?.("(prefers-color-scheme: dark)").matches,
-  );
-
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const apply = () => {
-      setDark(mq.matches);
-      document.documentElement.classList.toggle("dark", mq.matches);
-    };
-    apply();
-    mq.addEventListener("change", apply);
-    return () => mq.removeEventListener("change", apply);
-  }, []);
-
-  return dark;
+  return useTheme().dark;
 }

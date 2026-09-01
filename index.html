@@ -5,6 +5,18 @@
     <link rel="icon" type="image/svg+xml" href="/tauri.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DevTool — Canivete Suíço</title>
+    <script>
+      // aplica o tema antes do React para evitar flash
+      try {
+        var raw = localStorage.getItem("devtool:theme");
+        var t = raw ? JSON.parse(raw) : "system";
+        var dark =
+          t === "dark" ||
+          (t !== "light" &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.classList.add(dark ? "dark" : "light");
+      } catch (e) {}
+    </script>
   </head>
 
   <body>
