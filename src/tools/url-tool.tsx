@@ -70,7 +70,7 @@ export function UrlTool() {
               ) : (
                 <div className="min-h-0 flex-1 overflow-auto rounded-md border border-line">
                   {base && (
-                    <div className="border-b border-line px-3 py-2 text-xs text-muted dark:border-line">
+                    <div className="border-b border-line px-3 py-2 text-xs text-muted">
                       base: <span className="font-mono">{base}</span>
                     </div>
                   )}

@@ -53,7 +53,7 @@ export function CidrTool() {
             value={input}
             onChange={(e) => setInput(e.currentTarget.value)}
             placeholder="192.168.0.10/24  ·  10.0.0.0 255.255.255.0"
-            className="rounded-md border border-line bg-surface px-3 py-2 font-mono text-base dark:border-line"
+            className="rounded-md border border-line-strong bg-surface-2 px-3 py-2 font-mono text-base"
           />
         </div>
 

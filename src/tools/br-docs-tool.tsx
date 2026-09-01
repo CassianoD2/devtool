@@ -30,12 +30,12 @@ export function BrDocsTool() {
             value={input}
             onChange={(e) => setInput(e.currentTarget.value)}
             placeholder="Digite ou cole um CPF/CNPJ…"
-            className="rounded-md border border-line bg-surface px-3 py-2 font-mono text-base dark:border-line"
+            className="rounded-md border border-line-strong bg-surface-2 px-3 py-2 font-mono text-base"
           />
         </div>
 
         {hasDigits && (
-          <div className="rounded-lg border border-line p-4 dark:border-line">
+          <div className="rounded-lg border border-line p-4">
             <div className="flex items-center gap-3">
               <span
                 className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold ${

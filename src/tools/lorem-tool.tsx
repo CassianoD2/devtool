@@ -37,7 +37,7 @@ export function LoremTool() {
               max={500}
               value={count}
               onChange={(e) => setCount(Number(e.currentTarget.value))}
-              className="w-20 rounded-md border border-line bg-surface px-2 py-1.5 text-sm"
+              className="w-20 rounded-md border border-line-strong bg-surface-2 px-2 py-1.5 text-sm"
             />
           </Field>
           <Checkbox
@@ -59,7 +59,7 @@ export function LoremTool() {
         <textarea
           readOnly
           value={output}
-          className="min-h-0 flex-1 resize-y rounded-md border border-line bg-surface p-3 text-sm leading-relaxed dark:border-line"
+          className="min-h-0 flex-1 resize-y rounded-md border border-line-strong bg-surface-2 p-3 text-sm leading-relaxed"
         />
       </div>
     </ToolBody>

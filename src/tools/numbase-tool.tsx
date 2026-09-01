@@ -48,7 +48,7 @@ export function NumBaseTool() {
             value={input}
             onChange={(e) => setInput(e.currentTarget.value)}
             placeholder="ex.: 255  ou  0xFF  ou  1010"
-            className="rounded-md border border-line bg-surface px-3 py-2 font-mono text-sm dark:border-line"
+            className="rounded-md border border-line-strong bg-surface-2 px-3 py-2 font-mono text-sm"
           />
         </div>
         {error && <ErrorNote message={error} />}

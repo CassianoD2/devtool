@@ -17,7 +17,7 @@ export function TextDiff() {
   );
 
   const ta =
- "min-h-0 flex-1 resize-y rounded-md border border-line bg-surface p-3 font-mono text-sm dark:border-line";
+ "min-h-0 flex-1 resize-y rounded-md border border-line-strong bg-surface-2 p-3 font-mono text-sm";
 
   return (
     <ToolBody
@@ -76,7 +76,7 @@ export function TextDiff() {
         />
         <div className="flex min-h-0 flex-col gap-1.5">
           <PaneHeading title="Diferença" />
-          <pre className="min-h-0 flex-1 overflow-auto rounded-md border border-line p-3 font-mono text-xs whitespace-pre-wrap dark:border-line">
+          <pre className="min-h-0 flex-1 overflow-auto rounded-md border border-line p-3 font-mono text-xs whitespace-pre-wrap">
             {parts.map((p, i) => (
               <span
                 key={i}

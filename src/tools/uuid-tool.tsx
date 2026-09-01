@@ -55,7 +55,7 @@ export function UuidTool() {
               max={1000}
               value={count}
               onChange={(e) => setCount(Number(e.currentTarget.value))}
-              className="w-20 rounded-md border border-line bg-surface px-2 py-1.5 text-sm"
+              className="w-20 rounded-md border border-line-strong bg-surface-2 px-2 py-1.5 text-sm"
             />
           </Field>
           <Checkbox label="Maiúsculas" checked={uppercase} onChange={setUppercase} />
@@ -86,7 +86,7 @@ export function UuidTool() {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.currentTarget.value)}
-                className="w-56 rounded-md border border-line bg-surface px-2 py-1.5 text-sm"
+                className="w-56 rounded-md border border-line-strong bg-surface-2 px-2 py-1.5 text-sm"
               />
             </Field>
           </div>

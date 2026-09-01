@@ -72,7 +72,7 @@ export function ApiTool<T>({
                 value={query}
                 onChange={(e) => setQuery(e.currentTarget.value)}
                 placeholder={placeholder}
-                className="w-64 rounded-md border border-line bg-surface px-3 py-1.5 text-sm"
+                className="w-64 rounded-md border border-line-strong bg-surface-2 px-3 py-1.5 text-sm"
               />
               {sample && (
                 <Button type="button" variant="ghost" onClick={() => setQuery(sample)}>
@@ -91,7 +91,7 @@ export function ApiTool<T>({
         {error && <ErrorNote message={error} />}
         {data != null && (
           <>
-            <div className="rounded-lg border border-line p-4 dark:border-line">
+            <div className="rounded-lg border border-line p-4">
               {renderResult(data)}
             </div>
             <details className="rounded-lg border border-line">
@@ -99,7 +99,7 @@ export function ApiTool<T>({
                 JSON bruto
                 <CopyButton value={raw} />
               </summary>
-              <pre className="max-h-80 overflow-auto border-t border-line px-4 py-3 font-mono text-xs dark:border-line">
+              <pre className="max-h-80 overflow-auto border-t border-line px-4 py-3 font-mono text-xs">
                 {raw}
               </pre>
             </details>

@@ -10,7 +10,7 @@ import {
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-lg border border-line p-4 dark:border-line">
+    <section className="rounded-lg border border-line p-4">
       <h3 className="mb-3 text-sm font-semibold text-ink">
         {title}
       </h3>
@@ -20,7 +20,7 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
 }
 
 const inputCls =
- "rounded-md border border-line bg-surface px-2 py-1.5 text-sm";
+ "rounded-md border border-line-strong bg-surface-2 px-2 py-1.5 text-sm";
 
 export function PasswordTool() {
   const [opts, setOpts] = useState<PasswordOptions>({

@@ -27,7 +27,7 @@ import {
 import { prettyIfJson, sendRequest, type HttpResult } from "../lib/httpclient";
 
 const inputCls =
- "rounded-md border border-line bg-surface px-2 py-1.5 text-sm";
+ "rounded-md border border-line-strong bg-surface-2 px-2 py-1.5 text-sm";
 
 interface HistoryEntry {
   id: string;
@@ -328,12 +328,12 @@ export function ApiClient() {
         </div>
 
         {importOpen && (
-          <div className="flex flex-col gap-2 rounded-md border border-line p-2 dark:border-line">
+          <div className="flex flex-col gap-2 rounded-md border border-line p-2">
             <textarea
               value={importText}
               onChange={(e) => setImportText(e.currentTarget.value)}
               placeholder="Cole aqui o comando curl…"
-              className="h-20 resize-y rounded-md border border-line bg-surface p-2 font-mono text-xs"
+              className="h-20 resize-y rounded-md border border-line-strong bg-surface-2 p-2 font-mono text-xs"
             />
             <div className="flex gap-2">
               <Button variant="primary" onClick={doImport} disabled={!importText.trim()}>
@@ -368,7 +368,7 @@ export function ApiClient() {
               { value: "auth", label: spec.auth.type === "none" ? "Auth" : `Auth · ${spec.auth.type}` },
             ]}
           />
-          <div className="min-h-0 flex-1 overflow-auto rounded-md border border-line p-2 dark:border-line">
+          <div className="min-h-0 flex-1 overflow-auto rounded-md border border-line p-2">
             {reqTab === "params" && (
               <KVEditor rows={paramState} onChange={editParams} />
             )}

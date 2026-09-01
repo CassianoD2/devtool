@@ -59,7 +59,7 @@ export function TimestampTool() {
             <input
               value={tz}
               onChange={(e) => setTz(e.currentTarget.value)}
-              className="w-52 rounded-md border border-line bg-surface px-2 py-1.5 text-sm"
+              className="w-52 rounded-md border border-line-strong bg-surface-2 px-2 py-1.5 text-sm"
             />
           </Field>
           <Button
@@ -87,7 +87,7 @@ export function TimestampTool() {
             value={input}
             onChange={(e) => setInput(e.currentTarget.value)}
             placeholder={mode === "epoch" ? "1700000000" : "2026-08-31T12:00:00Z"}
-            className="rounded-md border border-line bg-surface px-3 py-2 font-mono text-sm dark:border-line"
+            className="rounded-md border border-line-strong bg-surface-2 px-3 py-2 font-mono text-sm"
           />
         </div>
         {error && <ErrorNote message={error} />}

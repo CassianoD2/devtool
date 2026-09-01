@@ -113,7 +113,7 @@ export function CurlTool() {
             value={command}
             onChange={(e) => setCommand(e.currentTarget.value)}
             placeholder="Cole um comando curl (ex.: 'Copiar como cURL' do DevTools)…"
-            className="h-28 resize-y rounded-md border border-line bg-surface p-3 font-mono text-xs dark:border-line"
+            className="h-28 resize-y rounded-md border border-line-strong bg-surface-2 p-3 font-mono text-xs"
           />
         </div>
 

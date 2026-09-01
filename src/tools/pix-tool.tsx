@@ -6,7 +6,7 @@ import { useToolDraft } from "../hooks/useToolDraft";
 import { buildPixCode, parsePixCode, type PixField } from "../lib/pix";
 
 const inputCls =
- "rounded-md border border-line bg-surface px-2 py-1.5 text-sm";
+ "rounded-md border border-line-strong bg-surface-2 px-2 py-1.5 text-sm";
 
 function flatten(
   fields: PixField[],
@@ -125,7 +125,7 @@ export function PixTool() {
               value={code}
               onChange={(e) => setCode(e.currentTarget.value)}
               placeholder="Cole o código copia e cola…"
-              className="h-24 resize-y rounded-md border border-line bg-surface p-3 font-mono text-xs dark:border-line"
+              className="h-24 resize-y rounded-md border border-line-strong bg-surface-2 p-3 font-mono text-xs"
             />
           </div>
           {decodeErr && <ErrorNote message={decodeErr} />}

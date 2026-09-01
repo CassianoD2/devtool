@@ -98,7 +98,7 @@ export function RegexTester() {
           value={pattern}
           onChange={(e) => setPattern(e.currentTarget.value)}
           placeholder="expressão regular, ex.: (\d{4})-(\d{2})"
-          className="rounded-md border border-line bg-surface px-3 py-2 font-mono text-sm dark:border-line"
+          className="rounded-md border border-line-strong bg-surface-2 px-3 py-2 font-mono text-sm"
         />
         {error && <ErrorNote message={error} />}
         <TwoPane
@@ -110,14 +110,14 @@ export function RegexTester() {
                 value={text}
                 onChange={(e) => setText(e.currentTarget.value)}
                 placeholder="Texto onde aplicar a regex…"
-                className="min-h-0 flex-1 resize-y rounded-md border border-line bg-surface p-3 font-mono text-sm dark:border-line"
+                className="min-h-0 flex-1 resize-y rounded-md border border-line-strong bg-surface-2 p-3 font-mono text-sm"
               />
             </>
           }
           right={
             <>
               <PaneHeading title="Resultado" />
-              <div className="min-h-0 flex-1 space-y-3 overflow-auto rounded-md border border-line p-3 dark:border-line">
+              <div className="min-h-0 flex-1 space-y-3 overflow-auto rounded-md border border-line p-3">
                 {highlighted && (
                   <p className="font-mono text-xs whitespace-pre-wrap break-words text-muted">
                     {highlighted}
@@ -126,7 +126,7 @@ export function RegexTester() {
                 {matches.map((m, i) => (
                   <div
                     key={i}
-                    className="rounded border border-line p-2 text-xs dark:border-line"
+                    className="rounded border border-line p-2 text-xs"
                   >
                     <div className="font-mono font-semibold">
                       #{i + 1} @ {m.index}: <span className="text-accent">{m.match}</span>

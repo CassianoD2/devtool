@@ -12,7 +12,7 @@ import {
 } from "../lib/chmod";
 
 const inputCls =
- "rounded-md border border-line bg-surface px-2 py-1.5 text-sm";
+ "rounded-md border border-line-strong bg-surface-2 px-2 py-1.5 text-sm";
 
 const ROLES: { key: keyof Pick<PermSet, "owner" | "group" | "other">; label: string }[] = [
   { key: "owner", label: "Dono" },
@@ -141,7 +141,7 @@ export function ChmodTool() {
           </div>
         </div>
 
-        <div className="rounded-lg border border-line p-4 dark:border-line">
+        <div className="rounded-lg border border-line p-4">
           <h3 className="mb-2 text-sm font-semibold text-ink">umask</h3>
           <div className="flex flex-wrap items-center gap-4 text-sm">
             <input value={umask} onChange={(e) => setUmask(e.currentTarget.value)} className={`w-20 font-mono ${inputCls}`} />

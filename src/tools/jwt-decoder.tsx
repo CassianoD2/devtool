@@ -50,7 +50,7 @@ export function JwtDecoder() {
             value={secret}
             onChange={(e) => setSecret(e.currentTarget.value)}
             placeholder="Segredo HMAC (opcional)"
-            className="w-56 rounded-md border border-line bg-surface px-2 py-1.5 text-sm"
+            className="w-56 rounded-md border border-line-strong bg-surface-2 px-2 py-1.5 text-sm"
           />
           <Button onClick={check} disabled={!input.trim() || !secret}>
             Verificar assinatura

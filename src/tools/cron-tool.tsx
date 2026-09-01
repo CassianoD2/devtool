@@ -28,7 +28,7 @@ export function CronTool() {
             value={expr}
             onChange={(e) => setExpr(e.currentTarget.value)}
             placeholder="min hora dia-mês mês dia-semana"
-            className="rounded-md border border-line bg-surface px-3 py-2 font-mono text-base dark:border-line"
+            className="rounded-md border border-line-strong bg-surface-2 px-3 py-2 font-mono text-base"
           />
         </div>
 
@@ -36,7 +36,7 @@ export function CronTool() {
 
         {info.description && (
           <>
-            <p className="rounded-lg border border-line bg-surface-2 p-4 text-lg dark:border-line">
+            <p className="rounded-lg border border-line-strong bg-surface-2-2 p-4 text-lg">
               {info.description}
             </p>
 

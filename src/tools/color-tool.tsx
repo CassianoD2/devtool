@@ -5,7 +5,7 @@ import { useToolDraft } from "../hooks/useToolDraft";
 import { parseColor, formatColor, contrast, type Rgb } from "../lib/color";
 
 const inputCls =
- "rounded-md border border-line bg-surface px-3 py-2 font-mono text-sm dark:border-line";
+ "rounded-md border border-line-strong bg-surface-2 px-3 py-2 font-mono text-sm";
 
 function safeParse(v: string): { rgb: Rgb | null; error: string | null } {
   try {
@@ -76,7 +76,7 @@ export function ColorTool() {
           </div>
         </div>
 
-        <div className="rounded-lg border border-line p-4 dark:border-line">
+        <div className="rounded-lg border border-line p-4">
           <h3 className="mb-3 text-sm font-semibold text-ink">
             Contraste WCAG
           </h3>
