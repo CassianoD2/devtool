@@ -42,5 +42,7 @@ export interface Tool {
   /** extra search terms */
   keywords: string[];
   icon: LucideIcon;
+  /** ferramenta faz requisições de rede para funcionar */
+  needsInternet?: boolean;
   Component: ComponentType | LazyExoticComponent<ComponentType>;
 }

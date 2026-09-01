@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useMemo } from "react";
-import { ChevronRight, ClipboardPaste, Info, Search, Settings, Wrench } from "lucide-react";
+import { ChevronRight, ClipboardPaste, Info, Search, Settings, Wifi, Wrench } from "lucide-react";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { TOOLS } from "../tools/registry";
 import {
@@ -159,6 +159,13 @@ export const Sidebar = forwardRef<
                           }
                         />
                         <span className="truncate">{t.name}</span>
+                        {t.needsInternet && (
+                          <Wifi
+                            size={12}
+                            className="ml-auto shrink-0 text-emerald-500"
+                            aria-label="Requer internet"
+                          />
+                        )}
                       </button>
                     );
                   })}

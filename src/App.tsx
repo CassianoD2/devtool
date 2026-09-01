@@ -1,5 +1,5 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
-import { ClipboardPaste, X } from "lucide-react";
+import { ClipboardPaste, Wifi, X } from "lucide-react";
 import { About } from "./components/About";
 import { Settings } from "./components/Settings";
 import { Sidebar } from "./components/Sidebar";
@@ -68,6 +68,15 @@ function App() {
           </h1>
         </div>
         <p className="ml-2 hidden truncate text-sm text-muted xl:block">{active.blurb}</p>
+        {active.needsInternet && (
+          <span
+            className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400"
+            title="Esta ferramenta faz requisições de rede"
+          >
+            <Wifi size={13} />
+            Conexão com internet necessária
+          </span>
+        )}
       </header>
 
       {hit && (

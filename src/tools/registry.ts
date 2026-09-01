@@ -153,6 +153,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "curl",
+    needsInternet: true,
     icon: Terminal,
     name: "cURL / HTTP",
     category: "sysadmin",
@@ -162,6 +163,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "api-client",
+    needsInternet: true,
     icon: Send,
     name: "API Client",
     category: "sysadmin",
@@ -171,6 +173,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "cep",
+    needsInternet: true,
     icon: MapPin,
     name: "CEP",
     category: "brasil",
@@ -180,6 +183,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "cnpj",
+    needsInternet: true,
     icon: Building2,
     name: "CNPJ",
     category: "brasil",
@@ -189,6 +193,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "ddd",
+    needsInternet: true,
     icon: Phone,
     name: "DDD",
     category: "brasil",
@@ -198,6 +203,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "banks",
+    needsInternet: true,
     icon: Landmark,
     name: "Bancos",
     category: "brasil",
@@ -207,6 +213,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "holidays",
+    needsInternet: true,
     icon: CalendarDays,
     name: "Feriados",
     category: "brasil",
