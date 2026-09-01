@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/cassianod2/devtool/compare/v1.0.1...v1.1.0) (2026-09-01)
+
+
+### Features
+
+* adiciona categoria Pessoal (Anotações e Tarefas do dia) ([2dbdb7c](https://github.com/cassianod2/devtool/commit/2dbdb7c95bd780989f249299603a1ee574c13cf1))
+
 ## [1.0.1](https://github.com/cassianod2/devtool/compare/v1.0.0...v1.0.1) (2026-09-01)
 
 

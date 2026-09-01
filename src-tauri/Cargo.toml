@@ -1,6 +1,6 @@
 [package]
 name = "devtool"
-version = "1.0.1"
+version = "1.1.0"
 description = "Canivete suíço para desenvolvimento — app desktop offline"
 authors = ["Cassiano Mesquita"]
 license = "MIT"
