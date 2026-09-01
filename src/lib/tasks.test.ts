@@ -17,6 +17,11 @@ import {
   formatShort,
   parseDuration,
   isoDay,
+  periodRange,
+  enumerateDays,
+  shiftPeriod,
+  rangeTotal,
+  groupByDate,
   type Task,
 } from "./tasks";
 
@@ -137,6 +142,94 @@ describe("visão por dia e carry-over", () => {
     ];
     expect(dayTotal(ts, "2026-03-10", T0)).toBe(900_000);
     expect(elapsedForDay(ts[1], "2026-03-10", T0)).toBe(300_000);
+  });
+});
+
+describe("períodos dia/semana/mês", () => {
+  it("periodRange: dia é ele mesmo", () => {
+    expect(periodRange("2026-03-10", "day")).toEqual(["2026-03-10", "2026-03-10"]);
+  });
+  it("periodRange: semana começa no domingo", () => {
+    // 2026-03-10 é uma terça → domingo 08, sábado 14
+    expect(periodRange("2026-03-10", "week")).toEqual(["2026-03-08", "2026-03-14"]);
+    // um domingo mapeia para ele mesmo como início
+    expect(periodRange("2026-03-08", "week")).toEqual(["2026-03-08", "2026-03-14"]);
+  });
+  it("periodRange: mês do dia 1 ao último (inclui fevereiro)", () => {
+    expect(periodRange("2026-02-17", "month")).toEqual(["2026-02-01", "2026-02-28"]);
+    expect(periodRange("2024-02-10", "month")).toEqual(["2024-02-01", "2024-02-29"]);
+    expect(periodRange("2026-03-31", "month")).toEqual(["2026-03-01", "2026-03-31"]);
+  });
+
+  it("enumerateDays: extremos, contagem e cruzando mês", () => {
+    expect(enumerateDays("2026-03-10", "2026-03-10")).toEqual(["2026-03-10"]);
+    const wk = enumerateDays("2026-03-08", "2026-03-14");
+    expect(wk).toHaveLength(7);
+    expect(wk[0]).toBe("2026-03-08");
+    expect(wk[6]).toBe("2026-03-14");
+    const cross = enumerateDays("2026-02-27", "2026-03-02");
+    expect(cross).toEqual(["2026-02-27", "2026-02-28", "2026-03-01", "2026-03-02"]);
+  });
+
+  it("shiftPeriod: dia ±1, semana ±7, mês vai pro dia 1 sem overflow", () => {
+    expect(shiftPeriod("2026-03-10", "day", 1)).toBe("2026-03-11");
+    expect(shiftPeriod("2026-03-01", "day", -1)).toBe("2026-02-28");
+    expect(shiftPeriod("2026-03-10", "week", 1)).toBe("2026-03-17");
+    expect(shiftPeriod("2026-03-10", "week", -1)).toBe("2026-03-03");
+    expect(shiftPeriod("2026-01-31", "month", 1)).toBe("2026-02-01");
+    expect(shiftPeriod("2026-03-15", "month", -1)).toBe("2026-02-01");
+  });
+
+  it("rangeTotal soma o tempo de todos os dias do intervalo", () => {
+    const ts = [
+      mk({ id: "a", timeByDay: { "2026-03-08": 600_000, "2026-03-10": 300_000 } }),
+      mk({ id: "b", timeByDay: { "2026-03-09": 120_000, "2026-03-20": 999_000 } }),
+    ];
+    expect(rangeTotal(ts, "2026-03-08", "2026-03-14", T0)).toBe(1_020_000);
+  });
+
+  describe("groupByDate", () => {
+    it("agrupa por data, ordenado, um grupo por dia com tarefa", () => {
+      const ts = [
+        mk({ id: "seg1", date: "2026-03-09", createdAt: 2 }),
+        mk({ id: "seg2", date: "2026-03-09", createdAt: 1 }),
+        mk({ id: "qua", date: "2026-03-11" }),
+      ];
+      const g = groupByDate(ts, "2026-03-08", "2026-03-14", "2026-03-09");
+      expect(g.days.map((d) => d.date)).toEqual(["2026-03-09", "2026-03-11"]);
+      expect(g.days[0].tasks.map((t) => t.id)).toEqual(["seg2", "seg1"]);
+    });
+
+    it("com hoje no intervalo, pendência vencida vai pra 'overdue' e sai dos dias", () => {
+      const ts = [
+        mk({ id: "old-open", date: "2026-03-09", done: false }),
+        mk({ id: "old-done", date: "2026-03-09", done: true }),
+        mk({ id: "today", date: "2026-03-11" }),
+      ];
+      const g = groupByDate(ts, "2026-03-08", "2026-03-14", "2026-03-11");
+      expect(g.overdue.map((t) => t.id)).toEqual(["old-open"]);
+      const dayIds = g.days.flatMap((d) => d.tasks.map((t) => t.id));
+      expect(dayIds).toContain("old-done");
+      expect(dayIds).toContain("today");
+      expect(dayIds).not.toContain("old-open");
+    });
+
+    it("intervalo sem hoje: nada de overdue, tudo agrupado por data", () => {
+      const ts = [
+        mk({ id: "x", date: "2026-01-05", done: false }),
+        mk({ id: "y", date: "2026-01-06", done: true }),
+      ];
+      const g = groupByDate(ts, "2026-01-01", "2026-01-31", "2026-03-11");
+      expect(g.overdue).toEqual([]);
+      expect(g.days.flatMap((d) => d.tasks.map((t) => t.id)).sort()).toEqual(["x", "y"]);
+    });
+
+    it("tarefa futura fica no próprio dia, nunca em overdue", () => {
+      const ts = [mk({ id: "fut", date: "2026-03-20", done: false })];
+      const g = groupByDate(ts, "2026-03-15", "2026-03-21", "2026-03-11");
+      expect(g.overdue).toEqual([]);
+      expect(g.days).toEqual([{ date: "2026-03-20", tasks: [ts[0]] }]);
+    });
   });
 });
 

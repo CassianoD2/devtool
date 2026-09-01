@@ -42,7 +42,7 @@ Bibliotecas de apoio: `marked` + `DOMPurify` + `mermaid` + `highlight.js`
 
 | Categoria | Ferramentas |
 | --- | --- |
-| **Pessoal** | Anotações (bloco de notas Markdown, editor visual Toast UI + botão Formatar/Prettier), Tarefas do dia (checklist diário com cronômetro de tempo realizado por tarefa, carry-over de pendências, histórico). Exportar/Importar `.json` local. |
+| **Pessoal** | Anotações (bloco de notas Markdown, editor visual Toast UI + botão Formatar/Prettier), Tarefas (checklist com cronômetro de tempo realizado por tarefa, visões dia / semana / mês agrupadas por data, criar tarefa em qualquer dia, carry-over de pendências, bloco "atrasadas"). Exportar/Importar `.json` local. |
 | **Formatadores** | JSON (formatar/minificar/validar/ordenar chaves), XML, YAML, Conversor JSON ↔ YAML ↔ XML |
 | **Encoders & Cripto** | Base64 (texto e arquivo, UTF-8/URL-safe), URL & Query String, JWT (decodificar + verificar HMAC), Hashes (MD5/SHA-1/256/384/512), UUID (v1/v4/v5/v7), Senha & bcrypt |
 | **Sistemas & Rede** | Cron (explicar + próximas execuções), chmod / permissões (octal ↔ simbólico, bits especiais, umask), CIDR / Sub-rede (IPv4), **cURL / HTTP**¹ (analisar comando, converter para fetch/HTTPie/wget/PowerShell, disparar), **API Client**¹ (cliente HTTP tipo Postman: params, headers, body, auth, requests salvos, histórico, variáveis `{{…}}`) |

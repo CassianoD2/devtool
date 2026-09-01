@@ -130,6 +130,108 @@ export function dayTotal(tasks: Task[], dayISO: string, now: number): number {
   return tasks.reduce((s, t) => s + elapsedForDay(t, dayISO, now), 0);
 }
 
+// ---------- períodos (dia / semana / mês) ----------
+
+export type Period = "day" | "week" | "month";
+
+function parseISO(iso: string): Date {
+  return new Date(`${iso}T00:00:00`);
+}
+
+/** Intervalo inclusivo [início, fim] em ISO do período que contém `dayISO`.
+ *  Semana começa no domingo; mês vai do dia 1 ao último. */
+export function periodRange(dayISO: string, period: Period): [string, string] {
+  if (period === "day") return [dayISO, dayISO];
+  const d = parseISO(dayISO);
+  if (period === "week") {
+    const start = new Date(d.getFullYear(), d.getMonth(), d.getDate() - d.getDay());
+    const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6);
+    return [isoDay(start.getTime()), isoDay(end.getTime())];
+  }
+  const start = new Date(d.getFullYear(), d.getMonth(), 1);
+  const end = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+  return [isoDay(start.getTime()), isoDay(end.getTime())];
+}
+
+/** Dias ISO de `startISO` até `endISO`, inclusive. */
+export function enumerateDays(startISO: string, endISO: string): string[] {
+  const out: string[] = [];
+  const end = parseISO(endISO);
+  let cur = parseISO(startISO);
+  while (cur.getTime() <= end.getTime()) {
+    out.push(isoDay(cur.getTime()));
+    cur = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate() + 1);
+  }
+  return out;
+}
+
+/** Avança (`dir` +1) ou retrocede (`dir` -1) um período a partir de `dayISO`.
+ *  Para "month", devolve o 1º dia do mês deslocado (sem overflow de data). */
+export function shiftPeriod(dayISO: string, period: Period, dir: number): string {
+  const d = parseISO(dayISO);
+  if (period === "day") {
+    return isoDay(new Date(d.getFullYear(), d.getMonth(), d.getDate() + dir).getTime());
+  }
+  if (period === "week") {
+    return isoDay(new Date(d.getFullYear(), d.getMonth(), d.getDate() + 7 * dir).getTime());
+  }
+  return isoDay(new Date(d.getFullYear(), d.getMonth() + dir, 1).getTime());
+}
+
+/** Tempo realizado somado em todas as tarefas ao longo do intervalo. */
+export function rangeTotal(
+  tasks: Task[],
+  startISO: string,
+  endISO: string,
+  now: number,
+): number {
+  return enumerateDays(startISO, endISO).reduce(
+    (s, day) => s + dayTotal(tasks, day, now),
+    0,
+  );
+}
+
+export interface DayGroup {
+  date: string;
+  tasks: Task[];
+}
+export interface GroupedTasks {
+  /** pendências vencidas (só quando o intervalo inclui hoje) */
+  overdue: Task[];
+  /** um grupo por dia do intervalo que tenha tarefas */
+  days: DayGroup[];
+}
+
+const byDoneThenCreated = (a: Task, b: Task) =>
+  Number(a.done) - Number(b.done) || a.createdAt - b.createdAt;
+
+/** Agrupa tarefas por `date` dentro do intervalo. Quando o intervalo inclui
+ *  hoje, as não-concluídas com data anterior a hoje saem num bloco "atrasadas". */
+export function groupByDate(
+  tasks: Task[],
+  startISO: string,
+  endISO: string,
+  todayISO: string,
+): GroupedTasks {
+  const includesToday = startISO <= todayISO && todayISO <= endISO;
+  const isOverdue = (t: Task) => includesToday && !t.done && t.date < todayISO;
+
+  const overdue = tasks
+    .filter(isOverdue)
+    .sort((a, b) => a.date.localeCompare(b.date) || a.createdAt - b.createdAt);
+
+  const days = enumerateDays(startISO, endISO)
+    .map((date) => ({
+      date,
+      tasks: tasks
+        .filter((t) => t.date === date && !isOverdue(t))
+        .sort(byDoneThenCreated),
+    }))
+    .filter((g) => g.tasks.length > 0);
+
+  return { overdue, days };
+}
+
 // ---------- operações (retornam novo array) ----------
 
 export function createTask(text: string, dateISO: string, now = Date.now()): Task {
