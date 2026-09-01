@@ -213,7 +213,7 @@ sozinho; não precisa de token nem workflow do lado do Forgejo.
 
 ## Licença
 
-Ainda não definida — adicione um arquivo `LICENSE` (ex.: MIT) antes de divulgar.
+[MIT](LICENSE) © Cassiano Mesquita.
 
 ---
 
