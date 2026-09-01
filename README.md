@@ -93,11 +93,12 @@ No CI, essas versões são geradas no job `bundle` (`.github/workflows/release.y
 o `.exe` cru vai pra um `.zip`; no Linux o `.AppImage` é extraído
 (`--appimage-extract`, sem FUSE) e re-empacotado como `.tar.gz`.
 
-> **Tela branca no Linux?** O WebKitGTK empacotado pode não bater com os drivers
-> de GPU do host. O app já define `WEBKIT_DISABLE_DMABUF_RENDERER=1` sozinho; se
-> mesmo assim aparecer em branco, tente
-> `WEBKIT_DISABLE_COMPOSITING_MODE=1 ./AppRun` ou use o `.deb`/`.rpm` (WebKit do
-> sistema).
+> **Portátil Linux:** o `bundle` remove do AppDir as libs que conflitam com hosts
+> mais novos (`libepoxy`, `libwayland-*` do Ubuntu 22.04 — davam
+> `EGL_BAD_PARAMETER`), então o app usa as do sistema. O binário ainda define
+> `WEBKIT_DISABLE_DMABUF_RENDERER=1` sozinho. Se num setup de GPU específico ainda
+> abrir em branco, tente `WEBKIT_DISABLE_COMPOSITING_MODE=1 ./AppRun` ou use o
+> `.deb`/`.rpm`.
 
 ### Scripts npm
 

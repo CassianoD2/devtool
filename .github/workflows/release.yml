@@ -126,17 +126,36 @@ jobs:
           Compress-Archive -Path "portable/*" -DestinationPath $out -Force
           gh release upload "${{ steps.ver.outputs.tag }}" $out --clobber
 
-      - name: Portable — Linux (.tar.gz autocontido, sem instalar nem FUSE)
+      - name: Portable — Linux (.tar.gz + AppImage sem libs conflitantes)
         if: matrix.os == 'ubuntu-22.04'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           v="${{ steps.ver.outputs.version }}"
+          tag="${{ steps.ver.outputs.tag }}"
           appimage=$(ls src-tauri/target/release/bundle/appimage/*.AppImage | head -1)
           chmod +x "$appimage"
           "$appimage" --appimage-extract >/dev/null   # gera ./squashfs-root (sem FUSE)
           mv squashfs-root "DevTool-${v}"
+
+          # libepoxy / libwayland do Ubuntu 22.04 abortam com EGL_BAD_PARAMETER em
+          # hosts com Mesa/compositor mais novos — remove pra usar as do sistema.
+          rm -f "DevTool-${v}"/usr/lib/libepoxy.so.0* \
+                "DevTool-${v}"/usr/lib/libwayland-client.so.0* \
+                "DevTool-${v}"/usr/lib/libwayland-egl.so.1* \
+                "DevTool-${v}"/usr/lib/libwayland-cursor.so.0* \
+                "DevTool-${v}"/usr/lib/libwayland-server.so.0*
+
+          # 1) portátil sem FUSE
           out="DevTool_${v}_linux-x64_portable.tar.gz"
           tar -czf "$out" "DevTool-${v}"
-          gh release upload "${{ steps.ver.outputs.tag }}" "$out" --clobber
+          gh release upload "$tag" "$out" --clobber
+
+          # 2) reempacota o .AppImage a partir do AppDir corrigido (substitui o do tauri-action)
+          wget -qO /tmp/appimagetool \
+            https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x /tmp/appimagetool
+          ARCH=x86_64 /tmp/appimagetool --appimage-extract-and-run \
+            "DevTool-${v}" "$(basename "$appimage")"
+          gh release upload "$tag" "$(basename "$appimage")" --clobber
