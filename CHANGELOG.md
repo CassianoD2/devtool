@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/cassianod2/devtool/compare/v1.1.0...v1.2.0) (2026-09-01)
+
+
+### Features
+
+* **tarefas:** visões dia/semana/mês e criação de tarefa em qualquer dia ([0829916](https://github.com/cassianod2/devtool/commit/0829916556af6778b86109fe052f23f297fc5599))
+
 # [1.1.0](https://github.com/cassianod2/devtool/compare/v1.0.1...v1.1.0) (2026-09-01)
 
 
