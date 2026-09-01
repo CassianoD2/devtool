@@ -167,49 +167,17 @@ sub-rede, contraste WCAG, sanitização do Markdown (ambiente jsdom), etc.
 
 ## CI/CD
 
-**GitHub é a fonte da verdade; o Forgejo é um espelho (pull-mirror).**
+- `.github/workflows/ci.yml` (push / PR): `typecheck` + `test` + `build`;
+  `rustfmt` + `clippy -D warnings` + `cargo test`; `commitlint` nos PRs.
+- `.github/workflows/release.yml` (push em `main`): `semantic-release` calcula a
+  versão pelos commits, gera `CHANGELOG.md` + tag + Release e compila os bundles
+  Tauri (Linux `.AppImage/.deb/.rpm`, Windows `.msi/.exe`, macOS `.dmg`),
+  anexando-os ao Release.
 
-| Workflow | Gatilho | O que faz |
-| --- | --- | --- |
-| `.github/workflows/ci.yml` | push em `main`, PRs | `commitlint` (só PR); `typecheck` + `test` + `build`; `rustfmt` + `clippy -D warnings` + `cargo test` |
-| `.github/workflows/release.yml` | push em `main` | `semantic-release` calcula a versão pelos commits, atualiza os 4 arquivos de versão, gera `CHANGELOG.md`, cria a tag `vX.Y.Z` e o Release; depois compila os bundles Tauri (Linux `.AppImage/.deb/.rpm`, Windows `.msi/.exe`, macOS `.dmg` universal) e anexa ao Release |
-
-### Versionamento — semantic-release + Conventional Commits
-
-A versão sai das mensagens de commit; não há bump manual:
-
-| Prefixo do commit | Efeito |
-| --- | --- |
-| `fix:` / `perf:` | patch (x.y.**z**) |
-| `feat:` | minor (x.**y**.0) |
-| `feat!:` ou `BREAKING CHANGE:` no corpo | major (**x**.0.0) |
-| `chore:` `docs:` `refactor:` `test:` `ci:` `build:` `style:` | sem release |
-
-`node scripts/set-version.mjs <x.y.z>` sincroniza `Cargo.toml`, `Cargo.lock` e
-`tauri.conf.json`; o `package.json` é cuidado pelo `@semantic-release/npm`.
-`npm run release:dry` mostra o que sairia sem publicar.
-
-> **Primeiro release:** por padrão o semantic-release começa em `1.0.0`. Para
-> continuar de `0.x`, crie a tag `v0.1.0` no commit inicial **antes** de habilitar
-> o workflow: `git tag v0.1.0 && git push origin v0.1.0`.
-
-### Publicar no GitHub
-
-```bash
-gh auth switch --user cassianod2      # ou: gh auth login
-gh repo create cassianod2/devtool --public --source=. --remote=origin --push
-```
-
-Se `main` tiver _branch protection_, permita o `github-actions[bot]` no bypass (o
-`@semantic-release/git` precisa dar push do commit de release) **ou** troque o
-`GITHUB_TOKEN` do workflow `version` por um PAT fine-grained em
-`secrets.GH_TOKEN`.
-
-### Espelho no Forgejo
-
-Na UI: **+ → New Migration → Git** → cole a URL do GitHub → marque **"This
-repository will be a mirror"** → intervalo (ex.: `10m`). O Forgejo passa a puxar
-sozinho; não precisa de token nem workflow do lado do Forgejo.
+Commits seguem **Conventional Commits**: `fix:` → patch, `feat:` → minor,
+`feat!:` / `BREAKING CHANGE:` → major; `chore:`/`docs:`/`refactor:`/`test:`/`ci:`
+não geram release. `npm run release:dry` mostra o que sairia sem publicar;
+`node scripts/set-version.mjs <x.y.z>` sincroniza a versão nos arquivos do Rust/Tauri.
 
 ## Licença
 
