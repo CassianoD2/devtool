@@ -11,9 +11,11 @@ const BTN_SIZE = { sm: "h-7 px-2", md: "h-8 px-3" } as const;
 const BTN_VARIANT = {
   primary: "bg-accent text-accent-fg hover:bg-accent-hover shadow-sm",
   default:
-    "border border-line bg-surface text-ink hover:bg-surface-2 hover:border-line-strong",
-  ghost: "text-muted hover:bg-surface-2 hover:text-ink",
-  danger: "text-red-600 hover:bg-red-500/10 dark:text-red-400",
+    "border border-line-strong bg-surface-2 text-ink hover:border-faint",
+  ghost:
+    "border border-line bg-surface-2/60 text-muted hover:border-line-strong hover:bg-surface-2 hover:text-ink",
+  danger:
+    "border border-red-300 text-red-600 hover:bg-red-500/10 dark:border-red-900/60 dark:text-red-400",
 } as const;
 
 export function Button({
@@ -61,7 +63,7 @@ export function Select({
   return (
     <div className="relative inline-flex">
       <select
-        className={`h-8 appearance-none rounded-md border border-line bg-surface pr-7 pl-2.5 text-sm text-ink transition-colors hover:border-line-strong ${className}`}
+        className={`h-8 appearance-none rounded-md border border-line-strong bg-surface-2 pr-7 pl-2.5 text-sm text-ink transition-colors hover:border-faint ${className}`}
         {...props}
       >
         {children}
@@ -82,7 +84,7 @@ export function Input({
 }: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
-      className={`h-8 rounded-md border border-line bg-surface px-2.5 text-sm text-ink transition-colors placeholder:text-faint hover:border-line-strong ${className}`}
+      className={`h-8 rounded-md border border-line-strong bg-surface-2 px-2.5 text-sm text-ink transition-colors placeholder:text-faint hover:border-faint ${className}`}
       {...props}
     />
   );
@@ -111,15 +113,15 @@ export function Segmented<T extends string>({
   onChange: (value: T) => void;
 }) {
   return (
-    <div className="inline-flex h-8 items-center gap-0.5 rounded-md bg-inset p-0.5">
+    <div className="inline-flex h-8 items-center gap-0.5 rounded-md border border-line bg-inset p-0.5">
       {options.map((opt) => (
         <button
           key={opt.value}
           onClick={() => onChange(opt.value)}
-          className={`h-7 rounded-[5px] px-2.5 text-sm font-medium transition-colors ${
+          className={`h-[26px] rounded-[5px] px-2.5 text-sm font-medium transition-colors ${
             value === opt.value
-              ? "bg-surface text-ink shadow-sm"
-              : "text-muted hover:text-ink"
+              ? "bg-surface-2 text-ink shadow-sm ring-1 ring-line-strong"
+              : "text-muted hover:bg-surface-2/60 hover:text-ink"
           }`}
         >
           {opt.label}
