@@ -1,0 +1,140 @@
+@import "tailwindcss";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/jetbrains-mono";
+
+/* Drive `dark:` utilities off a class on <html> that useDark() keeps in sync
+   with the OS `prefers-color-scheme`. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Inter Variable", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, "Fira Code", "SF Mono", monospace;
+
+  /* semantic surface + text tokens (see overrides below for dark) */
+  --color-bg: #fafafa;
+  --color-surface: #ffffff;
+  --color-surface-2: #f4f4f5;
+  --color-inset: #f4f4f5;
+  --color-line: #e6e6e9;
+  --color-line-strong: #d9d9de;
+  --color-ink: #18181b;
+  --color-muted: #6c6c76;
+  --color-faint: #9a9aa4;
+  --color-accent: #4f46e5;
+  --color-accent-hover: #4338ca;
+  --color-accent-fg: #ffffff;
+  --color-accent-soft: #eef2ff;
+  --color-accent-soft-fg: #4338ca;
+}
+
+:root {
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
+  --color-bg: #0a0a0b;
+  --color-surface: #141416;
+  --color-surface-2: #202024;
+  --color-inset: #101012;
+  --color-line: #26262b;
+  --color-line-strong: #35353c;
+  --color-ink: #f2f2f3;
+  --color-muted: #9b9ba5;
+  --color-faint: #6a6a74;
+  --color-accent: #6366f1;
+  --color-accent-hover: #818cf8;
+  --color-accent-fg: #ffffff;
+  --color-accent-soft: color-mix(in oklab, #6366f1 18%, transparent);
+  --color-accent-soft-fg: #a5b4fc;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    color-scheme: dark;
+    --color-bg: #0a0a0b;
+    --color-surface: #141416;
+    --color-surface-2: #202024;
+    --color-inset: #101012;
+    --color-line: #26262b;
+    --color-line-strong: #35353c;
+    --color-ink: #f2f2f3;
+    --color-muted: #9b9ba5;
+    --color-faint: #6a6a74;
+    --color-accent: #6366f1;
+    --color-accent-hover: #818cf8;
+    --color-accent-fg: #ffffff;
+    --color-accent-soft: color-mix(in oklab, #6366f1 18%, transparent);
+    --color-accent-soft-fg: #a5b4fc;
+  }
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "cv05", "cv08", "ss03";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--color-accent) 28%, transparent);
+}
+
+/* thin, theme-aware scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--color-line-strong);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 9999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--color-faint);
+  background-clip: content-box;
+}
+
+/* keyboard focus ring, consistent everywhere */
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+  border-radius: 4px;
+}
+
+/* CodeMirror: fill container, own font, quiet gutters */
+.cm-editor {
+  height: 100%;
+  background: transparent;
+}
+.cm-scroller {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+.cm-editor .cm-gutters {
+  background: transparent;
+  border-right: 1px solid var(--color-line);
+  color: var(--color-faint);
+}
+.cm-editor.cm-focused {
+  outline: none;
+}
+.cm-editor .cm-activeLine,
+.cm-editor .cm-activeLineGutter {
+  background: color-mix(in oklab, var(--color-accent) 7%, transparent);
+}
