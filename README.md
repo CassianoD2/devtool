@@ -26,6 +26,7 @@ internet necessária"** no cabeçalho, além de um ícone de Wi-Fi na barra late
 | **Interface e lógica** | **TypeScript** (~8,5k linhas) + **React 19** | Toda a aplicação: UI, lógica das ferramentas e testes. `tsc --noEmit` sem erros. |
 | Estilo | **CSS** + **Tailwind CSS v4** | Sistema de _design tokens_ (claro/escuro) em `src/styles.css`. |
 | Editor de código | **CodeMirror 6** | Painéis de JSON/XML/YAML. |
+| Editor Markdown | **Toast UI Editor** + **Prettier** | Anotações e Markdown Preview (WYSIWYG + formatar). Sem telemetria. |
 | **Shell nativo** | **Rust** (edition 2021) — **~18 linhas** | Só registra os plugins do Tauri; nenhuma lógica de negócio no backend. |
 | Runtime desktop | **Tauri 2** | WebView do sistema (WebKitGTK no Linux) — binário de ~25 MB. |
 | Build / dev server | **Vite 7** | |
@@ -41,6 +42,7 @@ Bibliotecas de apoio: `marked` + `DOMPurify` + `mermaid` + `highlight.js`
 
 | Categoria | Ferramentas |
 | --- | --- |
+| **Pessoal** | Anotações (bloco de notas Markdown, editor visual Toast UI + botão Formatar/Prettier), Tarefas do dia (checklist diário com cronômetro de tempo realizado por tarefa, carry-over de pendências, histórico). Exportar/Importar `.json` local. |
 | **Formatadores** | JSON (formatar/minificar/validar/ordenar chaves), XML, YAML, Conversor JSON ↔ YAML ↔ XML |
 | **Encoders & Cripto** | Base64 (texto e arquivo, UTF-8/URL-safe), URL & Query String, JWT (decodificar + verificar HMAC), Hashes (MD5/SHA-1/256/384/512), UUID (v1/v4/v5/v7), Senha & bcrypt |
 | **Sistemas & Rede** | Cron (explicar + próximas execuções), chmod / permissões (octal ↔ simbólico, bits especiais, umask), CIDR / Sub-rede (IPv4), **cURL / HTTP**¹ (analisar comando, converter para fetch/HTTPie/wget/PowerShell, disparar), **API Client**¹ (cliente HTTP tipo Postman: params, headers, body, auth, requests salvos, histórico, variáveis `{{…}}`) |

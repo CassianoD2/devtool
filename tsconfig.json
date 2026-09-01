@@ -10,6 +10,12 @@
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
+
+    /* @toast-ui/editor tem tipos mas o package.json "exports" não os expõe */
+    "paths": {
+      "@toast-ui/editor": ["./node_modules/@toast-ui/editor/types/index.d.ts"]
+    },
+
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",

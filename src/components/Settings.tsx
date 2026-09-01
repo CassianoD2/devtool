@@ -111,7 +111,10 @@ export function Settings({ open, onClose }: { open: boolean; onClose: () => void
           <Section title="Dados">
             <p className="mb-2 text-xs text-faint">
               Tudo fica só neste computador (localStorage): entradas das ferramentas,
-              requests salvos e histórico do API Client, variáveis, tamanhos de painel.
+              requests salvos e histórico do API Client, variáveis, tamanhos de painel,
+              Anotações e Tarefas. As Anotações e Tarefas têm{" "}
+              <span className="text-muted">Exportar / Importar</span> próprio na barra
+              da ferramenta — use antes de limpar.
             </p>
             <Button
               variant="danger"

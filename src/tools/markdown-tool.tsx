@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import mermaid from "mermaid";
+import { Sparkles } from "lucide-react";
 import { ToolBody, PaneHeading } from "../components/ToolLayout";
 import { SplitPane } from "../components/ui/SplitPane";
-import { Button, CopyButton, Segmented } from "../components/ui/primitives";
+import { MarkdownEditor } from "../components/ui/MarkdownEditor";
+import { Button, CopyButton, ErrorNote, Segmented } from "../components/ui/primitives";
+import { useToast } from "../components/ui/Toast";
 import { useToolDraft } from "../hooks/useToolDraft";
 import { useTheme } from "../hooks/useTheme";
 import { renderMarkdown, MARKDOWN_SAMPLE } from "../lib/markdown";
@@ -12,8 +15,21 @@ type View = "split" | "preview" | "editor";
 export function MarkdownTool() {
   const [source, setSource] = useToolDraft("markdown", "");
   const [view, setView] = useState<View>("split");
+  const [fmtError, setFmtError] = useState<string | null>(null);
   const { dark } = useTheme();
+  const toast = useToast();
   const previewRef = useRef<HTMLDivElement>(null);
+
+  async function format() {
+    setFmtError(null);
+    try {
+      const { formatMarkdown } = await import("../lib/mdformat");
+      setSource(await formatMarkdown(source));
+      toast("Formatado");
+    } catch (err) {
+      setFmtError((err as Error).message);
+    }
+  }
 
   // parse é barato; o custo é o mermaid.run, então debouncamos a fonte
   const [debounced, setDebounced] = useState(source);
@@ -48,13 +64,10 @@ export function MarkdownTool() {
   const editor = (
     <div className="flex h-full min-h-0 flex-col gap-1.5">
       <PaneHeading title="Markdown" />
-      <textarea
-        autoFocus
+      <MarkdownEditor
         value={source}
-        onChange={(e) => setSource(e.currentTarget.value)}
+        onChange={setSource}
         placeholder="Escreva ou cole Markdown (GFM, ```mermaid, ```ts …)"
-        spellCheck={false}
-        className="min-h-0 flex-1 resize-none rounded-lg border border-line-strong bg-surface-2 p-3 font-mono text-[13px] leading-relaxed text-ink placeholder:text-faint"
       />
     </div>
   );
@@ -89,6 +102,10 @@ export function MarkdownTool() {
             ]}
           />
           <div className="ml-auto flex gap-1">
+            <Button variant="ghost" onClick={format} disabled={!source.trim()}>
+              <Sparkles size={14} />
+              Formatar
+            </Button>
             <Button variant="ghost" onClick={() => setSource(MARKDOWN_SAMPLE)}>
               Exemplo
             </Button>
@@ -99,13 +116,18 @@ export function MarkdownTool() {
         </>
       }
     >
-      {view === "split" ? (
-        <SplitPane storageKey="markdown" className="h-full" first={editor} second={preview} />
-      ) : view === "editor" ? (
-        editor
-      ) : (
-        preview
-      )}
+      <div className="flex h-full min-h-0 flex-col gap-2">
+        {fmtError && <ErrorNote message={fmtError} />}
+        <div className="min-h-0 flex-1">
+          {view === "split" ? (
+            <SplitPane storageKey="markdown" className="h-full" first={editor} second={preview} />
+          ) : view === "editor" ? (
+            editor
+          ) : (
+            preview
+          )}
+        </div>
+      </div>
 
       <style>{`
         .md-prose { color: var(--color-ink); font-size: 14px; line-height: 1.7; }

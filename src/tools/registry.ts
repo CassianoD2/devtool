@@ -1,6 +1,6 @@
 import { lazy } from "react";
 import type { Tool } from "./types";
-import { ArrowLeftRight, Binary, Braces, Building2, Calculator, CalendarDays, CaseSensitive, Clock, Code, FileCode2, FileText, Fingerprint, GitCompare, Hash, IdCard, KeyRound, Landmark, Link2, LockKeyhole, MapPin, Network, Palette, Phone, QrCode, Regex, Send, ShieldCheck, Terminal, Timer, Type } from "lucide-react";
+import { ArrowLeftRight, Binary, Braces, Building2, Calculator, CalendarDays, CaseSensitive, Clock, Code, FileCode2, FileText, Fingerprint, GitCompare, Hash, IdCard, KeyRound, Landmark, Link2, ListTodo, LockKeyhole, MapPin, Network, Palette, Phone, QrCode, Regex, Send, ShieldCheck, StickyNote, Terminal, Timer, Type } from "lucide-react";
 import { JsonFormatter } from "./json-formatter";
 import { XmlFormatter } from "./xml-formatter";
 import { YamlFormatter } from "./yaml-formatter";
@@ -27,13 +27,37 @@ import { ColorTool } from "./color-tool";
 import { CurlTool } from "./curl-tool";
 import { ApiClient } from "./api-client";
 
-// Carregado sob demanda: marked + DOMPurify + mermaid + highlight.js são pesados
-// e só interessam a quem abre esta ferramenta.
+// Carregadas sob demanda: puxam libs pesadas (Toast UI Editor, Prettier, mermaid,
+// highlight.js) que só interessam a quem abre a ferramenta.
 const MarkdownTool = lazy(() =>
   import("./markdown-tool").then((m) => ({ default: m.MarkdownTool })),
 );
+const NotesTool = lazy(() =>
+  import("./notes-tool").then((m) => ({ default: m.NotesTool })),
+);
+const TasksTool = lazy(() =>
+  import("./tasks-tool").then((m) => ({ default: m.TasksTool })),
+);
 
 export const TOOLS: Tool[] = [
+  {
+    id: "notes",
+    icon: StickyNote,
+    name: "Anotações",
+    category: "personal",
+    blurb: "Bloco de notas em Markdown, com editor visual e formatação",
+    keywords: ["anota", "notas", "bloco", "markdown", "notepad", "scratchpad", "rascunho"],
+    Component: NotesTool,
+  },
+  {
+    id: "tasks",
+    icon: ListTodo,
+    name: "Tarefas do dia",
+    category: "personal",
+    blurb: "Checklist diário com cronômetro de tempo realizado",
+    keywords: ["tarefa", "task", "todo", "afazeres", "cronômetro", "tempo", "diário", "checklist"],
+    Component: TasksTool,
+  },
   {
     id: "json-formatter",
     icon: Braces,
