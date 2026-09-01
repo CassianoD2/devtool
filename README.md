@@ -69,14 +69,29 @@ npm run tauri dev      # abre a janela do app com hot-reload
 ### Build
 
 ```bash
-npm run tauri build                 # instaladores da plataforma atual
-npm run tauri build -- --no-bundle  # só o executável
+npm run tauri build                    # instaladores da plataforma atual
+npm run tauri build -- --no-bundle     # só o executável
+npm run tauri build -- --bundles appimage   # (Linux) só o AppImage portátil
 ```
 
 Saída em `src-tauri/target/release/` (executável) e
 `src-tauri/target/release/bundle/` (`.AppImage`/`.deb`/`.rpm` no Linux,
 `.msi`/`.exe` no Windows, `.dmg` no macOS). `identifier` e ícones em
 `src-tauri/tauri.conf.json`.
+
+### Versões portáteis (sem instalar nada)
+
+Cada Release no GitHub traz, além dos instaladores:
+
+| Arquivo | Como usar |
+| --- | --- |
+| `DevTool_<v>_linux-x64_portable.tar.gz` | `tar xzf` em qualquer pasta → `./DevTool-<v>/AppRun`. Autocontido (empacota WebKitGTK); não precisa de root, pacotes nem FUSE. |
+| `DevTool_<v>_amd64.AppImage` | `chmod +x` → executa direto (precisa de `libfuse2`; se faltar, use o `.tar.gz` acima). |
+| `DevTool_<v>_windows-x64_portable.zip` | descompacte → `DevTool.exe`. Só depende do **WebView2 Runtime** (já vem no Windows 10 21H2+/11). |
+
+No CI, essas versões são geradas no job `bundle` (`.github/workflows/release.yml`):
+o `.exe` cru vai pra um `.zip`; no Linux o `.AppImage` é extraído
+(`--appimage-extract`, sem FUSE) e re-empacotado como `.tar.gz`.
 
 ### Scripts npm
 

@@ -3,8 +3,13 @@ name: Release
 on:
   push:
     branches: [main]
+  # (re)compilar os bundles de uma tag já existente, sem cortar release novo
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag existente (ex.: v1.0.0)"
+        required: true
 
-# não roda para o commit "chore(release): … [skip ci]" feito pelo próprio release
 concurrency:
   group: release
   cancel-in-progress: false
@@ -15,10 +20,9 @@ permissions:
   pull-requests: write
 
 jobs:
-  # 1) semantic-release decide a próxima versão a partir dos commits,
-  #    atualiza package.json / Cargo.toml / Cargo.lock / tauri.conf.json / CHANGELOG,
-  #    faz o commit de release, cria a tag vX.Y.Z e o GitHub Release (sem assets ainda).
+  # 1) só no push: semantic-release decide a versão, gera CHANGELOG + tag + Release.
   version:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     outputs:
       published: ${{ steps.semantic.outputs.new_release_published }}
@@ -43,11 +47,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # 2) se houve release, compila os bundles do Tauri em cada plataforma
-  #    e anexa ao Release criado no passo anterior.
+  # 2) compila os bundles em cada plataforma e anexa ao Release:
+  #    - no push, quando houve release novo
+  #    - no workflow_dispatch, para a tag informada
   bundle:
     needs: version
-    if: needs.version.outputs.published == 'true'
+    if: |
+      always() &&
+      (needs.version.outputs.published == 'true' || github.event_name == 'workflow_dispatch')
     strategy:
       fail-fast: false
       matrix:
@@ -57,9 +64,21 @@ jobs:
           - { os: macos-latest, args: "--target universal-apple-darwin" }
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Resolver versão / tag
+        id: ver
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            tag="${{ inputs.tag }}"
+          else
+            tag="v${{ needs.version.outputs.version }}"
+          fi
+          echo "tag=$tag"            >> "$GITHUB_OUTPUT"
+          echo "version=${tag#v}"    >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@v4
         with:
-          ref: v${{ needs.version.outputs.version }}
+          ref: ${{ steps.ver.outputs.tag }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -78,12 +97,46 @@ jobs:
             libwebkit2gtk-4.1-dev libsoup-3.0-dev librsvg2-dev \
             libappindicator3-dev libxdo-dev patchelf
       - run: npm ci
-      - uses: tauri-apps/tauri-action@v0
+
+      - name: Compilar bundles e publicar no Release
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: v${{ needs.version.outputs.version }}
-          releaseName: v${{ needs.version.outputs.version }}
+          tagName: ${{ steps.ver.outputs.tag }}
+          releaseName: ${{ steps.ver.outputs.tag }}
           releaseBody: "Notas em [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)."
           releaseDraft: false
           args: ${{ matrix.args }}
+
+      # ---- versões portáteis (rodam sem instalar nada) --------------------
+      - name: Portable — Windows (.zip com o executável)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $v   = "${{ steps.ver.outputs.version }}"
+          $rel = "src-tauri/target/release"
+          $out = "DevTool_${v}_windows-x64_portable.zip"
+          New-Item -ItemType Directory -Force -Path portable | Out-Null
+          Copy-Item "$rel/devtool.exe" "portable/DevTool.exe"
+          # inclui DLLs soltas (ex.: WebView2Loader.dll) se o build não linkar estático
+          Get-ChildItem "$rel/*.dll" -ErrorAction SilentlyContinue | Copy-Item -Destination portable
+          Compress-Archive -Path "portable/*" -DestinationPath $out -Force
+          gh release upload "${{ steps.ver.outputs.tag }}" $out --clobber
+
+      - name: Portable — Linux (.tar.gz autocontido, sem instalar nem FUSE)
+        if: matrix.os == 'ubuntu-22.04'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          v="${{ steps.ver.outputs.version }}"
+          appimage=$(ls src-tauri/target/release/bundle/appimage/*.AppImage | head -1)
+          chmod +x "$appimage"
+          "$appimage" --appimage-extract >/dev/null   # gera ./squashfs-root (sem FUSE)
+          mv squashfs-root "DevTool-${v}"
+          out="DevTool_${v}_linux-x64_portable.tar.gz"
+          tar -czf "$out" "DevTool-${v}"
+          gh release upload "${{ steps.ver.outputs.tag }}" "$out" --clobber
