@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useTheme, type ThemePref } from "../hooks/useTheme";
 import { useLocalStorage } from "../hooks/useLocalStorage";
+import { copyToClipboard } from "../lib/clipboard";
 import { openExternal } from "../lib/http";
 import {
   fetchLatestRelease,
@@ -62,6 +63,7 @@ export function Settings({ open, onClose }: { open: boolean; onClose: () => void
     null,
   );
   const [current, setCurrent] = useState<string | null>(null);
+  const [showNotes, setShowNotes] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -82,6 +84,7 @@ export function Settings({ open, onClose }: { open: boolean; onClose: () => void
 
   async function checkUpdates() {
     setUpStatus("checking");
+    setShowNotes(false);
     try {
       const latest = await fetchLatestRelease();
       const cur = current ?? (await getAppVersion());
@@ -94,6 +97,18 @@ export function Settings({ open, onClose }: { open: boolean; onClose: () => void
       }
     } catch {
       setUpStatus("error");
+    }
+  }
+
+  async function openRelease() {
+    if (!release) return;
+    const ok = await openExternal(release.url);
+    if (ok) {
+      toast("Abrindo a página do release no navegador…");
+    } else if (await copyToClipboard(release.url).then(() => true).catch(() => false)) {
+      toast("Não abriu o navegador — link copiado.", "error");
+    } else {
+      toast("Não foi possível abrir nem copiar o link.", "error");
     }
   }
 
@@ -229,22 +244,33 @@ export function Settings({ open, onClose }: { open: boolean; onClose: () => void
                   <div className="text-xs text-muted">Você tem a v{current}.</div>
                 )}
                 <div className="mt-2 flex flex-wrap gap-2">
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => openExternal(release.url)}
-                  >
+                  <Button variant="primary" size="sm" onClick={openRelease}>
                     <Download size={14} />
                     Baixar
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => openExternal(release.url)}
-                  >
-                    Ver notas
-                  </Button>
+                  {release.notes && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowNotes((s) => !s)}
+                    >
+                      {showNotes ? "Ocultar notas" : "Ver notas"}
+                    </Button>
+                  )}
                 </div>
+                {showNotes && release.notes && (
+                  <pre className="mt-2 max-h-48 overflow-auto rounded border border-line bg-surface p-2 text-[11px] leading-relaxed whitespace-pre-wrap text-muted">
+                    {release.notes}
+                  </pre>
+                )}
+                <button
+                  type="button"
+                  onClick={openRelease}
+                  className="mt-2 block max-w-full truncate text-left text-[11px] text-faint hover:text-accent"
+                  title={release.url}
+                >
+                  {release.url}
+                </button>
               </div>
             )}
           </Section>

@@ -4,17 +4,22 @@ export function isTauri(): boolean {
   return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 }
 
-/** Abre uma URL no navegador do sistema (ou nova aba fora do Tauri). */
-export async function openExternal(url: string): Promise<void> {
+/**
+ * Abre uma URL no navegador do sistema (ou nova aba fora do Tauri).
+ * Retorna `false` quando não foi possível — aí o chamador pode dar um fallback
+ * (copiar o link, avisar o usuário).
+ */
+export async function openExternal(url: string): Promise<boolean> {
   try {
     if (isTauri()) {
       const m = await import("@tauri-apps/plugin-opener");
       await m.openUrl(url);
     } else {
-      window.open(url, "_blank");
+      window.open(url, "_blank", "noopener");
     }
+    return true;
   } catch {
-    /* ignore */
+    return false;
   }
 }
 
