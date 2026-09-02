@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/cassianod2/devtool/compare/v1.4.1...v1.5.0) (2026-09-02)
+
+
+### Features
+
+* Onda 1 de novas ferramentas + Favoritos/Recentes na barra lateral ([91b1c79](https://github.com/cassianod2/devtool/commit/91b1c7929d17ba3bdef948889fe3e28a798c5503))
+
 ## [1.4.1](https://github.com/cassianod2/devtool/compare/v1.4.0...v1.4.1) (2026-09-02)
 
 
