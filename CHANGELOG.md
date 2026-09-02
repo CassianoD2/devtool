@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/cassianod2/devtool/compare/v1.4.0...v1.4.1) (2026-09-02)
+
+
+### Bug Fixes
+
+* **update:** botão "Baixar" dá retorno e fallback quando o navegador não abre ([4645729](https://github.com/cassianod2/devtool/commit/4645729f9e34b5eeedc8f583af555f044776f44c))
+
 # [1.4.0](https://github.com/cassianod2/devtool/compare/v1.3.1...v1.4.0) (2026-09-02)
 
 
