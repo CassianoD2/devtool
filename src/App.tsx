@@ -68,7 +68,7 @@ function App() {
           <ActiveIcon size={17} />
         </span>
         <div className="min-w-0">
-          <div className="text-[11px] font-semibold tracking-wide text-faint uppercase">
+          <div className="text-[11px] font-semibold tracking-wide text-muted uppercase">
             {CATEGORY_LABELS[active.category]}
           </div>
           <h1 className="truncate text-[15px] leading-tight font-semibold text-ink">

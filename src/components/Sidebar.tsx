@@ -57,6 +57,11 @@ export const Sidebar = forwardRef<
 
   const activeCat = TOOLS.find((t) => t.id === activeId)?.category;
 
+  const visibleCats = useMemo(
+    () => CATEGORY_ORDER.filter((c) => filtered.some((t) => t.category === c)),
+    [filtered],
+  );
+
   // ao trocar de ferramenta, garante que a categoria dela esteja aberta
   useEffect(() => {
     if (activeCat && collapsed[activeCat]) {
@@ -116,36 +121,48 @@ export const Sidebar = forwardRef<
           </div>
         )}
 
-        {CATEGORY_ORDER.map((cat) => {
+        {visibleCats.map((cat, i) => {
           const tools = filtered.filter((t) => t.category === cat);
-          if (tools.length === 0) return null;
           const CatIcon = CATEGORY_ICONS[cat];
           const open = searching || !collapsed[cat];
+          const activeHere = cat === activeCat;
           return (
-            <div key={cat} className="mb-1">
+            <div
+              key={cat}
+              className={i > 0 ? "mt-2 border-t border-line pt-2" : ""}
+            >
               <button
                 onClick={() =>
                   !searching && setCollapsed((c) => ({ ...c, [cat]: !c[cat] }))
                 }
-                className="group flex w-full items-center gap-1.5 rounded-md border border-transparent px-2 py-1.5 text-[11px] font-semibold tracking-wide text-faint uppercase transition-colors hover:border-line hover:bg-surface hover:text-ink"
+                className={`group flex w-full items-center gap-1.5 rounded-md border border-transparent px-2 py-1.5 text-[11px] font-semibold tracking-wide uppercase transition-colors hover:border-line hover:bg-surface hover:text-ink ${
+                  activeHere ? "text-ink" : "text-muted"
+                }`}
               >
-                <span className="grid size-4 shrink-0 place-items-center rounded-sm text-faint transition-colors group-hover:bg-inset group-hover:text-accent">
+                <span
+                  className={`grid size-4 shrink-0 place-items-center rounded-sm transition-colors group-hover:bg-inset group-hover:text-accent ${
+                    activeHere ? "text-ink" : "text-muted"
+                  }`}
+                >
                   <ChevronRight
                     size={12}
                     className={`transition-transform ${open ? "rotate-90" : ""}`}
                   />
                 </span>
-                <CatIcon size={12} className="shrink-0" />
+                <CatIcon
+                  size={12}
+                  className={`shrink-0 ${activeHere ? "text-ink" : "text-muted"}`}
+                />
                 <span className="flex-1 truncate text-left">{CATEGORY_LABELS[cat]}</span>
                 {!open && (
-                  <span className="rounded bg-inset px-1.5 py-0.5 text-[10px] font-bold normal-case text-muted">
+                  <span className="rounded bg-inset px-1.5 py-0.5 text-[10px] font-bold normal-case text-ink">
                     {tools.length}
                   </span>
                 )}
               </button>
 
               {open && (
-                <div className="mt-0.5 mb-2 flex flex-col gap-px">
+                <div className="mt-1 mb-1 flex flex-col gap-px">
                   {tools.map((t) => {
                     const active = t.id === activeId;
                     const Icon = t.icon;
@@ -155,17 +172,17 @@ export const Sidebar = forwardRef<
                         onClick={() => onSelect(t.id)}
                         className={`group relative flex items-center gap-2 rounded-md py-1.5 pr-2 pl-2.5 text-left text-sm transition-colors ${
                           active
-                            ? "bg-accent-soft font-medium text-accent-soft-fg"
+                            ? "bg-accent-soft font-medium text-accent-soft-fg ring-1 ring-inset ring-accent/25"
                             : "text-muted hover:bg-surface hover:text-ink"
                         }`}
                       >
                         {active && (
-                          <span className="absolute top-1/2 left-0 h-4 w-0.5 -translate-y-1/2 rounded-full bg-accent" />
+                          <span className="absolute inset-y-1 left-0 w-[3px] rounded-full bg-accent" />
                         )}
                         <Icon
                           size={15}
                           className={
-                            active ? "text-accent" : "text-faint group-hover:text-muted"
+                            active ? "text-accent" : "text-muted group-hover:text-ink"
                           }
                         />
                         <span className="truncate">{t.name}</span>
