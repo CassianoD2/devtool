@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Code2, Globe, Mail, Wrench, X } from "lucide-react";
-import { openUrl } from "@tauri-apps/plugin-opener";
-import { isTauri } from "../lib/http";
+import { openExternal } from "../lib/http";
+import { getAppVersion } from "../lib/update";
 import { TOOLS } from "../tools/registry";
 import { Button } from "./ui/primitives";
 
@@ -23,15 +23,6 @@ const DEV = {
 
 const STACK = ["Tauri 2", "Rust", "React 19", "TypeScript", "Tailwind v4", "Vite"];
 
-async function open(url: string) {
-  try {
-    if (isTauri()) await openUrl(url);
-    else window.open(url, "_blank");
-  } catch {
-    /* ignore */
-  }
-}
-
 function initials(name: string) {
   return name
     .split(/\s+/)
@@ -47,12 +38,7 @@ export function About({ open: isOpen, onClose }: { open: boolean; onClose: () =>
     if (!isOpen) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
-    if (isTauri()) {
-      import("@tauri-apps/api/app")
-        .then((m) => m.getVersion())
-        .then(setVersion)
-        .catch(() => {});
-    }
+    getAppVersion().then((v) => v && setVersion(v));
     return () => window.removeEventListener("keydown", onKey);
   }, [isOpen, onClose]);
 
@@ -114,19 +100,19 @@ export function About({ open: isOpen, onClose }: { open: boolean; onClose: () =>
 
             <div className="mt-3 flex flex-wrap gap-2">
               {DEV.email && (
-                <Button size="sm" onClick={() => open(`mailto:${DEV.email}`)}>
+                <Button size="sm" onClick={() => openExternal(`mailto:${DEV.email}`)}>
                   <Mail size={14} />
                   E-mail
                 </Button>
               )}
               {DEV.github && (
-                <Button size="sm" onClick={() => open(DEV.github)}>
+                <Button size="sm" onClick={() => openExternal(DEV.github)}>
                   <Code2 size={14} />
                   GitHub
                 </Button>
               )}
               {DEV.site && (
-                <Button size="sm" onClick={() => open(DEV.site)}>
+                <Button size="sm" onClick={() => openExternal(DEV.site)}>
                   <Globe size={14} />
                   Site
                 </Button>
@@ -134,7 +120,7 @@ export function About({ open: isOpen, onClose }: { open: boolean; onClose: () =>
             </div>
             {DEV.emailBackup && (
               <button
-                onClick={() => open(`mailto:${DEV.emailBackup}`)}
+                onClick={() => openExternal(`mailto:${DEV.emailBackup}`)}
                 className="mt-2 text-xs text-faint transition-colors hover:text-muted"
               >
                 backup: {DEV.emailBackup}

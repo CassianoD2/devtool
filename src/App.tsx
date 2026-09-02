@@ -10,6 +10,7 @@ import { CATEGORY_LABELS } from "./tools/types";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import { useClipboardDetect } from "./hooks/useClipboardDetect";
 import type { Suggestion } from "./lib/detect";
+import { getAppVersion, isNewer, type ReleaseInfo } from "./lib/update";
 import { TOOLS, TOOLS_BY_ID } from "./tools/registry";
 
 function App() {
@@ -20,6 +21,13 @@ function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const { hit, check, dismiss } = useClipboardDetect();
+
+  const [foundRelease] = useLocalStorage<ReleaseInfo | null>("devtool:updates:release", null);
+  const [appVer, setAppVer] = useState<string | null>(null);
+  useEffect(() => {
+    getAppVersion().then(setAppVer);
+  }, []);
+  const hasUpdate = !!foundRelease && !!appVer && isNewer(foundRelease.version, appVer);
 
   const active = TOOLS_BY_ID.get(activeId) ?? TOOLS[0];
 
@@ -139,6 +147,7 @@ function App() {
               onDetectClipboard={() => check(true)}
               onAbout={() => setAboutOpen(true)}
               onSettings={() => setSettingsOpen(true)}
+              hasUpdate={hasUpdate}
             />
           }
           second={mainPane}

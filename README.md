@@ -135,7 +135,9 @@ Windows → *Mais informações* → *Executar assim mesmo* no aviso do SmartScr
   barra lateral), o app olha o clipboard e sugere a ferramenta certa — JWT, JSON,
   cor, CIDR, cron, CPF/CNPJ, PIX, UUID, URL, timestamp, Base64, comando `curl`.
 - **Configurações:** tema **Claro / Escuro / Sistema**, restaurar tamanhos de
-  painéis, limpar dados salvos.
+  painéis, limpar dados salvos e **verificar atualizações** (compara com a última
+  release no GitHub e abre a página para baixar — manual, sob demanda; nada é
+  baixado sozinho).
 - **Sobre:** dados do desenvolvedor e da stack.
 - **Persistência local:** última ferramenta, rascunho de cada ferramenta,
   tamanho/posição da janela, requests e variáveis do API Client — tudo em

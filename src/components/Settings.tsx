@@ -1,8 +1,29 @@
-import { useEffect } from "react";
-import { Monitor, Moon, RotateCcw, Settings as Gear, Sun, Trash2, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  Download,
+  Monitor,
+  Moon,
+  RefreshCw,
+  RotateCcw,
+  Settings as Gear,
+  Sun,
+  Trash2,
+  Wifi,
+  X,
+} from "lucide-react";
 import { useTheme, type ThemePref } from "../hooks/useTheme";
+import { useLocalStorage } from "../hooks/useLocalStorage";
+import { openExternal } from "../lib/http";
+import {
+  fetchLatestRelease,
+  getAppVersion,
+  isNewer,
+  type ReleaseInfo,
+} from "../lib/update";
 import { Button } from "./ui/primitives";
 import { useToast } from "./ui/Toast";
+
+type UpdateStatus = "idle" | "checking" | "current" | "available" | "error";
 
 function clearKeys(prefix: string) {
   const keys: string[] = [];
@@ -35,12 +56,46 @@ export function Settings({ open, onClose }: { open: boolean; onClose: () => void
   const { theme, setTheme, dark } = useTheme();
   const toast = useToast();
 
+  const [upStatus, setUpStatus] = useState<UpdateStatus>("idle");
+  const [release, setRelease] = useLocalStorage<ReleaseInfo | null>(
+    "devtool:updates:release",
+    null,
+  );
+  const [current, setCurrent] = useState<string | null>(null);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
+
+  useEffect(() => {
+    if (open) getAppVersion().then(setCurrent);
+  }, [open]);
+
+  useEffect(() => {
+    if (open && release && current && isNewer(release.version, current)) {
+      setUpStatus("available");
+    }
+  }, [open, release, current]);
+
+  async function checkUpdates() {
+    setUpStatus("checking");
+    try {
+      const latest = await fetchLatestRelease();
+      const cur = current ?? (await getAppVersion());
+      if (cur && isNewer(latest.version, cur)) {
+        setRelease(latest);
+        setUpStatus("available");
+      } else {
+        setRelease(null);
+        setUpStatus("current");
+      }
+    } catch {
+      setUpStatus("error");
+    }
+  }
 
   if (!open) return null;
 
@@ -134,6 +189,64 @@ export function Settings({ open, onClose }: { open: boolean; onClose: () => void
               <Trash2 size={14} />
               Limpar dados salvos
             </Button>
+          </Section>
+
+          <Section title="Atualizações">
+            <p className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-faint">
+              Verifica as releases publicadas no GitHub. Nada é baixado sozinho.
+              <span
+                className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 font-medium text-emerald-600 dark:text-emerald-400"
+                title="Só esta ação usa a internet"
+              >
+                <Wifi size={11} />
+                requer internet
+              </span>
+            </p>
+            <Button onClick={checkUpdates} disabled={upStatus === "checking"}>
+              <RefreshCw
+                size={14}
+                className={upStatus === "checking" ? "animate-spin" : ""}
+              />
+              {upStatus === "checking" ? "Verificando…" : "Verificar agora"}
+            </Button>
+
+            {upStatus === "current" && (
+              <p className="mt-2 text-xs text-faint">
+                Você está na versão mais recente{current ? ` (v${current})` : ""}.
+              </p>
+            )}
+            {upStatus === "error" && (
+              <p className="mt-2 text-xs text-red-500">
+                Não foi possível verificar (sem conexão?).
+              </p>
+            )}
+            {upStatus === "available" && release && (
+              <div className="mt-2 rounded-lg border border-accent bg-accent-soft p-3">
+                <div className="text-sm font-medium text-ink">
+                  Nova versão: v{release.version}
+                </div>
+                {current && (
+                  <div className="text-xs text-muted">Você tem a v{current}.</div>
+                )}
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => openExternal(release.url)}
+                  >
+                    <Download size={14} />
+                    Baixar
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => openExternal(release.url)}
+                  >
+                    Ver notas
+                  </Button>
+                </div>
+              </div>
+            )}
           </Section>
         </div>
       </div>

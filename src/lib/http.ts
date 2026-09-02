@@ -4,6 +4,20 @@ export function isTauri(): boolean {
   return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 }
 
+/** Abre uma URL no navegador do sistema (ou nova aba fora do Tauri). */
+export async function openExternal(url: string): Promise<void> {
+  try {
+    if (isTauri()) {
+      const m = await import("@tauri-apps/plugin-opener");
+      await m.openUrl(url);
+    } else {
+      window.open(url, "_blank");
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
 export class HttpError extends Error {
   constructor(
     public status: number,

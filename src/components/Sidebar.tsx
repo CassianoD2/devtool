@@ -29,9 +29,19 @@ export const Sidebar = forwardRef<
     onDetectClipboard: () => void;
     onAbout: () => void;
     onSettings: () => void;
+    hasUpdate?: boolean;
   }
 >(function Sidebar(
-  { activeId, onSelect, query, onQueryChange, onDetectClipboard, onAbout, onSettings },
+  {
+    activeId,
+    onSelect,
+    query,
+    onQueryChange,
+    onDetectClipboard,
+    onAbout,
+    onSettings,
+    hasUpdate,
+  },
   searchRef,
 ) {
   const [collapsed, setCollapsed] = useLocalStorage<Partial<Record<ToolCategory, boolean>>>(
@@ -187,6 +197,12 @@ export const Sidebar = forwardRef<
         >
           <Settings size={15} className="text-faint" />
           Configurações
+          {hasUpdate && (
+            <span
+              className="ml-auto size-2 rounded-full bg-accent"
+              title="Atualização disponível"
+            />
+          )}
         </button>
         <button
           onClick={onAbout}
