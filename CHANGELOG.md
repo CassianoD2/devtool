@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/cassianod2/devtool/compare/v1.2.0...v1.3.0) (2026-09-02)
+
+
+### Features
+
+* verificação de atualizações via GitHub Releases nas Configurações ([f77c441](https://github.com/cassianod2/devtool/commit/f77c4419e6f0833425400b2b967584fd00cb576e))
+
 # [1.2.0](https://github.com/cassianod2/devtool/compare/v1.1.0...v1.2.0) (2026-09-01)
 
 
