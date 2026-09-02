@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/cassianod2/devtool/compare/v1.3.0...v1.3.1) (2026-09-02)
+
+
+### Bug Fixes
+
+* **ci:** tauri-action cria o Release rascunho (não o semantic-release) ([4f5d070](https://github.com/cassianod2/devtool/commit/4f5d0707ff9f42bbffe572ce50c5326b9b422ef8))
+
 # [1.3.0](https://github.com/cassianod2/devtool/compare/v1.2.0...v1.3.0) (2026-09-02)
 
 
