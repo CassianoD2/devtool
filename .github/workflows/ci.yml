@@ -82,18 +82,17 @@ jobs:
       - run: node scripts/check-versions.mjs
 
   # ---- release (só push na main) -------------------------------------------
-  # 1) semantic-release decide a versão, gera CHANGELOG + tag + Release RASCUNHO
+  # 1) semantic-release decide a versão, gera CHANGELOG + commit + tag.
+  #    NÃO cria o GitHub Release — quem cria (como rascunho) é o tauri-action.
   version:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [web, rust, versions]
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      issues: write
-      pull-requests: write
     outputs:
-      published: ${{ steps.semantic.outputs.new_release_published }}
       version: ${{ steps.semantic.outputs.new_release_version }}
+      notes: ${{ steps.semantic.outputs.new_release_notes }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -114,14 +113,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # 2) compila os bundles em cada plataforma e anexa ao Release (rascunho):
+  # 2) compila os bundles em cada plataforma; o tauri-action cria o Release como
+  #    RASCUNHO (releaseDraft) e anexa os assets:
   #    - no push, quando houve release novo
   #    - no workflow_dispatch, para a tag informada
   bundle:
     needs: version
     if: |
       always() &&
-      (needs.version.outputs.published == 'true' || github.event_name == 'workflow_dispatch')
+      (needs.version.outputs.version != '' || github.event_name == 'workflow_dispatch')
     permissions:
       contents: write
     strategy:
@@ -167,12 +167,14 @@ jobs:
             libappindicator3-dev libxdo-dev patchelf
       - run: npm ci
 
-      - name: Compilar bundles e anexar ao Release
+      - name: Compilar bundles e anexar ao Release (rascunho)
         uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: ${{ steps.ver.outputs.tag }}
+          releaseName: ${{ steps.ver.outputs.tag }}
+          releaseDraft: true
           args: ${{ matrix.args }}
 
       # ---- versões portáteis (rodam sem instalar nada) --------------------
@@ -230,21 +232,22 @@ jobs:
             "DevTool-${v}" "$(basename "$appimage")"
           gh release upload "$tag" "$(basename "$appimage")" --clobber
 
-  # 3) só quando os 3 bundles terminaram: SHA256SUMS + publica o rascunho
+  # 3) só quando os 3 bundles terminaram: notas + SHA256SUMS + publica o rascunho
   publish:
     needs: [version, bundle]
     if: |
       always() &&
       needs.bundle.result == 'success' &&
-      (needs.version.outputs.published == 'true' || github.event_name == 'workflow_dispatch')
+      (needs.version.outputs.version != '' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - name: Checksums e publicação
+      - name: Notas, checksums e publicação
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
+          NOTES: ${{ needs.version.outputs.notes }}
         run: |
           set -euo pipefail
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
@@ -253,13 +256,19 @@ jobs:
             tag="v${{ needs.version.outputs.version }}"
           fi
 
+          # notas do release (só quando o semantic-release rodou; no dispatch fica vazio)
+          if [ -n "${NOTES:-}" ]; then
+            printf '%s\n' "$NOTES" > /tmp/notes.md
+            gh release edit "$tag" --notes-file /tmp/notes.md
+          fi
+
+          # SHA256SUMS.txt a partir dos assets já anexados
           tmp=$(mktemp -d); cd "$tmp"
           gh release download "$tag"
           rm -f SHA256SUMS.txt
           sha256sum * > SHA256SUMS.txt
           gh release upload "$tag" SHA256SUMS.txt --clobber
 
-          # promove o rascunho a release público (não no rebuild de tag antiga)
-          if [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
-            gh release edit "$tag" --draft=false --latest
-          fi
+          # promove o rascunho a release público (marca como "latest" — no
+          # workflow_dispatch, só recompile a tag mais recente para não mexer nisso)
+          gh release edit "$tag" --draft=false --latest

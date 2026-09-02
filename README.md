@@ -204,12 +204,13 @@ Tudo num só workflow, `.github/workflows/ci.yml`:
 - **push / PR:** `typecheck` + `test` + `build`; `rustfmt` + `clippy -D warnings`
   + `cargo test`; `check-versions.mjs` (as três versões batem); `commitlint` nos PRs.
 - **push em `main`:** o job `version` só roda **depois** de tudo acima passar —
-  `semantic-release` calcula a versão pelos commits, gera `CHANGELOG.md` + tag +
-  um **Release em rascunho** com as notas daquela versão. O job `bundle` compila
-  os bundles Tauri das 3 plataformas (Linux `.AppImage/.deb/.rpm`, Windows
-  `.msi/.exe`, macOS `.dmg`) + as portáteis e anexa ao rascunho. Só quando os três
-  terminam, o job `publish` gera o `SHA256SUMS.txt` e **promove o rascunho a
-  Release público** — se algum bundle falhar, nada vira público.
+  `semantic-release` calcula a versão pelos commits, gera `CHANGELOG.md` + commit
+  + tag (não cria o GitHub Release). O job `bundle` compila os bundles Tauri das
+  3 plataformas (Linux `.AppImage/.deb/.rpm`, Windows `.msi/.exe`, macOS `.dmg`)
+  + as portáteis; o `tauri-action` cria o Release como **rascunho** e anexa tudo.
+  Só quando os três terminam, o job `publish` põe as notas da versão, gera o
+  `SHA256SUMS.txt` e **promove o rascunho a Release público** — se algum bundle
+  falhar, nada vira público.
 - Actions fixadas por commit SHA (`# vX` no comentário), atualizadas via
   Dependabot (`.github/dependabot.yml`); `appimagetool` fixado + conferido por hash.
 - `workflow_dispatch` (input `tag`): recompila os bundles de uma tag já lançada
