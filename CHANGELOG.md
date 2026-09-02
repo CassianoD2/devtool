@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/cassianod2/devtool/compare/v1.3.1...v1.4.0) (2026-09-02)
+
+
+### Features
+
+* **sidebar:** reforça contraste e hierarquia dos menus da barra lateral ([bdf8624](https://github.com/cassianod2/devtool/commit/bdf8624318222a78a46440d38b0b3c3b70221439))
+
 ## [1.3.1](https://github.com/cassianod2/devtool/compare/v1.3.0...v1.3.1) (2026-09-02)
 
 
