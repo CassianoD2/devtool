@@ -91,9 +91,14 @@ Cada Release no GitHub traz, além dos instaladores:
 | `DevTool_<v>_amd64.AppImage` | `chmod +x` → executa direto (precisa de `libfuse2`; se faltar, use o `.tar.gz` acima). |
 | `DevTool_<v>_windows-x64_portable.zip` | descompacte → `DevTool.exe`. Só depende do **WebView2 Runtime** (já vem no Windows 10 21H2+/11). |
 
-No CI, essas versões são geradas no job `bundle` (`.github/workflows/release.yml`):
+No CI, essas versões são geradas no job `bundle` (`.github/workflows/ci.yml`):
 o `.exe` cru vai pra um `.zip`; no Linux o `.AppImage` é extraído
 (`--appimage-extract`, sem FUSE) e re-empacotado como `.tar.gz`.
+
+Cada Release traz também um **`SHA256SUMS.txt`** para conferir os downloads
+(`sha256sum -c SHA256SUMS.txt`). Os bundles de macOS e Windows **não são
+assinados** — no primeiro uso: macOS → botão direito no `.app` → *Abrir*;
+Windows → *Mais informações* → *Executar assim mesmo* no aviso do SmartScreen.
 
 > **Portátil Linux:** o `bundle` remove do AppDir as libs que conflitam com hosts
 > mais novos (`libepoxy`, `libwayland-*` do Ubuntu 22.04 — davam
@@ -113,6 +118,7 @@ o `.exe` cru vai pra um `.zip`; no Linux o `.AppImage` é extraído
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run check` | `typecheck` + `test` |
 | `npm run set-version <x.y.z>` | sincroniza a versão nos arquivos do Rust/Tauri |
+| `npm run check:versions` | confere que `package.json` / `Cargo.toml` / `tauri.conf.json` têm a mesma versão |
 | `npm run release:dry` | prévia do próximo release (semantic-release, sem publicar) |
 
 ## Recursos da interface
@@ -155,8 +161,8 @@ src/
     *.tsx          um módulo por ferramenta
 src-tauri/         shell Rust: registra plugins (http, clipboard-manager,
                    dialog, os, window-state, opener) + CSP. Sem comandos custom.
-scripts/          set-version.mjs (usado pelo release)
-.github/workflows ci.yml, release.yml
+scripts/          set-version.mjs, check-versions.mjs (usados pelo release/CI)
+.github/workflows ci.yml (CI + release num só workflow)
 ```
 
 **Princípio central:** toda lógica não-trivial vive em `src/lib/*.ts` como função
@@ -185,18 +191,27 @@ nunca alcança a internet — a CSP bloqueia.
 npm run test
 ```
 
-136 testes (Vitest) cobrindo as funções puras de `src/lib`: parsing/serialização,
+190 testes (Vitest) cobrindo as funções puras de `src/lib`: parsing/serialização,
 dígitos verificadores de CPF/CNPJ, CRC16 do PIX, conversão de bases, cálculo de
 sub-rede, contraste WCAG, sanitização do Markdown (ambiente jsdom), etc.
 
 ## CI/CD
 
-- `.github/workflows/ci.yml` (push / PR): `typecheck` + `test` + `build`;
-  `rustfmt` + `clippy -D warnings` + `cargo test`; `commitlint` nos PRs.
-- `.github/workflows/release.yml` (push em `main`): `semantic-release` calcula a
-  versão pelos commits, gera `CHANGELOG.md` + tag + Release e compila os bundles
-  Tauri (Linux `.AppImage/.deb/.rpm`, Windows `.msi/.exe`, macOS `.dmg`),
-  anexando-os ao Release.
+Tudo num só workflow, `.github/workflows/ci.yml`:
+
+- **push / PR:** `typecheck` + `test` + `build`; `rustfmt` + `clippy -D warnings`
+  + `cargo test`; `check-versions.mjs` (as três versões batem); `commitlint` nos PRs.
+- **push em `main`:** o job `version` só roda **depois** de tudo acima passar —
+  `semantic-release` calcula a versão pelos commits, gera `CHANGELOG.md` + tag +
+  um **Release em rascunho** com as notas daquela versão. O job `bundle` compila
+  os bundles Tauri das 3 plataformas (Linux `.AppImage/.deb/.rpm`, Windows
+  `.msi/.exe`, macOS `.dmg`) + as portáteis e anexa ao rascunho. Só quando os três
+  terminam, o job `publish` gera o `SHA256SUMS.txt` e **promove o rascunho a
+  Release público** — se algum bundle falhar, nada vira público.
+- Actions fixadas por commit SHA (`# vX` no comentário), atualizadas via
+  Dependabot (`.github/dependabot.yml`); `appimagetool` fixado + conferido por hash.
+- `workflow_dispatch` (input `tag`): recompila os bundles de uma tag já lançada
+  sem cortar release novo.
 
 Commits seguem **Conventional Commits**: `fix:` → patch, `feat:` → minor,
 `feat!:` / `BREAKING CHANGE:` → major; `chore:`/`docs:`/`refactor:`/`test:`/`ci:`

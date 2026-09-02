@@ -21,6 +21,7 @@
     "typecheck": "tsc --noEmit",
     "tauri": "tauri",
     "check": "npm run typecheck && npm run test",
+    "check:versions": "node scripts/check-versions.mjs",
     "set-version": "node scripts/set-version.mjs",
     "release:dry": "npx -y -p semantic-release@24 -p @semantic-release/changelog -p @semantic-release/exec -p @semantic-release/git semantic-release --dry-run --no-ci"
   },

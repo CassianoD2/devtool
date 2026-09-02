@@ -1,35 +1,43 @@
-name: CI
+name: CI / Release
 
 on:
   push:
     branches: [main]
   pull_request:
+  # recompila os bundles de uma tag já existente, sem cortar release novo
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag existente (ex.: v1.0.0)"
+        required: true
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # cancela runs de PR supersedidos; nunca cancela um release em andamento na main
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
 
-concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
+  # ---- checagens (todo push / PR) --------------------------------------------
   commitlint:
-    # valida as mensagens de commit (Conventional Commits) nos PRs
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
-      - uses: wagoid/commitlint-github-action@v6
+      - uses: wagoid/commitlint-github-action@b948419dd99f3fd78a6548d48f94e3df7f6bf3ed # v6
         with:
           configFile: commitlint.config.mjs
 
   web:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
@@ -39,9 +47,10 @@ jobs:
       - run: npm run build
 
   rust:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Instalar dependências de sistema (Tauri/Linux)
         run: |
           sudo apt-get update
@@ -49,10 +58,10 @@ jobs:
             libwebkit2gtk-4.1-dev libsoup-3.0-dev librsvg2-dev \
             libappindicator3-dev libxdo-dev patchelf \
             build-essential curl wget file libssl-dev
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@stable # usa branch por design; sem SHA fixo
         with:
           components: rustfmt, clippy
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
         with:
           workspaces: src-tauri -> target
       - name: rustfmt
@@ -64,3 +73,193 @@ jobs:
       - name: cargo test
         working-directory: src-tauri
         run: cargo test
+
+  versions:
+    if: github.event_name != 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - run: node scripts/check-versions.mjs
+
+  # ---- release (só push na main) -------------------------------------------
+  # 1) semantic-release decide a versão, gera CHANGELOG + tag + Release RASCUNHO
+  version:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [web, rust, versions]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    outputs:
+      published: ${{ steps.semantic.outputs.new_release_published }}
+      version: ${{ steps.semantic.outputs.new_release_version }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - id: semantic
+        uses: cycjimmy/semantic-release-action@16ca923e6ccbb50770c415a0ccd43709a8c5f7a4 # v4
+        with:
+          extra_plugins: |
+            @semantic-release/changelog
+            @semantic-release/exec
+            @semantic-release/git
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # 2) compila os bundles em cada plataforma e anexa ao Release (rascunho):
+  #    - no push, quando houve release novo
+  #    - no workflow_dispatch, para a tag informada
+  bundle:
+    needs: version
+    if: |
+      always() &&
+      (needs.version.outputs.published == 'true' || github.event_name == 'workflow_dispatch')
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-22.04, args: "" }
+          - { os: windows-latest, args: "" }
+          - { os: macos-latest, args: "--target universal-apple-darwin" }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Resolver versão / tag
+        id: ver
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            tag="${{ inputs.tag }}"
+          else
+            tag="v${{ needs.version.outputs.version }}"
+          fi
+          echo "tag=$tag"            >> "$GITHUB_OUTPUT"
+          echo "version=${tag#v}"    >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ steps.ver.outputs.tag }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable # usa branch por design; sem SHA fixo
+        with:
+          targets: ${{ matrix.os == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+        with:
+          workspaces: src-tauri -> target
+      - name: Instalar dependências de sistema (Linux)
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev libsoup-3.0-dev librsvg2-dev \
+            libappindicator3-dev libxdo-dev patchelf
+      - run: npm ci
+
+      - name: Compilar bundles e anexar ao Release
+        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ steps.ver.outputs.tag }}
+          args: ${{ matrix.args }}
+
+      # ---- versões portáteis (rodam sem instalar nada) --------------------
+      - name: Portable — Windows (.zip com o executável)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $v   = "${{ steps.ver.outputs.version }}"
+          $rel = "src-tauri/target/release"
+          $out = "DevTool_${v}_windows-x64_portable.zip"
+          New-Item -ItemType Directory -Force -Path portable | Out-Null
+          Copy-Item "$rel/devtool.exe" "portable/DevTool.exe"
+          # inclui DLLs soltas (ex.: WebView2Loader.dll) se o build não linkar estático
+          Get-ChildItem "$rel/*.dll" -ErrorAction SilentlyContinue | Copy-Item -Destination portable
+          Compress-Archive -Path "portable/*" -DestinationPath $out -Force
+          gh release upload "${{ steps.ver.outputs.tag }}" $out --clobber
+
+      - name: Portable — Linux (.tar.gz + AppImage sem libs conflitantes)
+        if: matrix.os == 'ubuntu-22.04'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          v="${{ steps.ver.outputs.version }}"
+          tag="${{ steps.ver.outputs.tag }}"
+          appimage=$(ls src-tauri/target/release/bundle/appimage/*.AppImage | head -1)
+          chmod +x "$appimage"
+          "$appimage" --appimage-extract >/dev/null   # gera ./squashfs-root (sem FUSE)
+          mv squashfs-root "DevTool-${v}"
+
+          # libepoxy / libwayland do Ubuntu 22.04 abortam com EGL_BAD_PARAMETER em
+          # hosts com Mesa/compositor mais novos — remove pra usar as do sistema.
+          rm -f "DevTool-${v}"/usr/lib/libepoxy.so.0* \
+                "DevTool-${v}"/usr/lib/libwayland-client.so.0* \
+                "DevTool-${v}"/usr/lib/libwayland-egl.so.1* \
+                "DevTool-${v}"/usr/lib/libwayland-cursor.so.0* \
+                "DevTool-${v}"/usr/lib/libwayland-server.so.0*
+
+          # 1) portátil sem FUSE
+          out="DevTool_${v}_linux-x64_portable.tar.gz"
+          tar -czf "$out" "DevTool-${v}"
+          gh release upload "$tag" "$out" --clobber
+
+          # 2) reempacota o .AppImage a partir do AppDir corrigido (substitui o do tauri-action)
+          #    appimagetool pinado + conferido (nada de build "continuous")
+          ait_ver=1.9.1
+          ait_sha=ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0
+          wget -qO /tmp/appimagetool \
+            "https://github.com/AppImage/appimagetool/releases/download/${ait_ver}/appimagetool-x86_64.AppImage"
+          echo "${ait_sha}  /tmp/appimagetool" | sha256sum -c -
+          chmod +x /tmp/appimagetool
+          ARCH=x86_64 /tmp/appimagetool --appimage-extract-and-run \
+            "DevTool-${v}" "$(basename "$appimage")"
+          gh release upload "$tag" "$(basename "$appimage")" --clobber
+
+  # 3) só quando os 3 bundles terminaram: SHA256SUMS + publica o rascunho
+  publish:
+    needs: [version, bundle]
+    if: |
+      always() &&
+      needs.bundle.result == 'success' &&
+      (needs.version.outputs.published == 'true' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checksums e publicação
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            tag="${{ inputs.tag }}"
+          else
+            tag="v${{ needs.version.outputs.version }}"
+          fi
+
+          tmp=$(mktemp -d); cd "$tmp"
+          gh release download "$tag"
+          rm -f SHA256SUMS.txt
+          sha256sum * > SHA256SUMS.txt
+          gh release upload "$tag" SHA256SUMS.txt --clobber
+
+          # promove o rascunho a release público (não no rebuild de tag antiga)
+          if [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
+            gh release edit "$tag" --draft=false --latest
+          fi
