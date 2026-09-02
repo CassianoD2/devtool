@@ -1,5 +1,5 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
-import { ClipboardPaste, Wifi, X } from "lucide-react";
+import { ClipboardPaste, Star, Wifi, X } from "lucide-react";
 import { About } from "./components/About";
 import { Settings } from "./components/Settings";
 import { Sidebar } from "./components/Sidebar";
@@ -29,6 +29,21 @@ function App() {
   }, []);
   const hasUpdate = !!foundRelease && !!appVer && isNewer(foundRelease.version, appVer);
 
+  const [favorites, setFavorites] = useLocalStorage<string[]>("devtool:favorites", []);
+  const [recents, setRecents] = useLocalStorage<string[]>("devtool:recents", []);
+  const toggleFavorite = useCallback(
+    (id: string) =>
+      setFavorites((f) => (f.includes(id) ? f.filter((x) => x !== id) : [...f, id])),
+    [setFavorites],
+  );
+  const selectTool = useCallback(
+    (id: string) => {
+      setActiveId(id);
+      setRecents((r) => [id, ...r.filter((x) => x !== id)].slice(0, 8));
+    },
+    [setActiveId, setRecents],
+  );
+
   const active = TOOLS_BY_ID.get(activeId) ?? TOOLS[0];
 
   const openSuggestion = useCallback(
@@ -41,11 +56,11 @@ function App() {
       } catch {
         /* ignore */
       }
-      setActiveId(s.toolId);
+      selectTool(s.toolId);
       setNonce((n) => n + 1);
       dismiss();
     },
-    [setActiveId, dismiss],
+    [selectTool, dismiss],
   );
 
   useEffect(() => {
@@ -75,6 +90,18 @@ function App() {
             {active.name}
           </h1>
         </div>
+        <button
+          onClick={() => toggleFavorite(active.id)}
+          title={favorites.includes(active.id) ? "Desfavoritar" : "Favoritar"}
+          aria-label={favorites.includes(active.id) ? "Desfavoritar" : "Favoritar"}
+          className={`grid size-7 shrink-0 place-items-center rounded-md border transition-colors ${
+            favorites.includes(active.id)
+              ? "border-amber-500/40 bg-amber-500/10 text-amber-500"
+              : "border-line-strong bg-surface-2 text-faint hover:text-amber-500"
+          }`}
+        >
+          <Star size={14} fill={favorites.includes(active.id) ? "currentColor" : "none"} />
+        </button>
         <p className="ml-2 hidden truncate text-sm text-muted xl:block">{active.blurb}</p>
         {active.needsInternet && (
           <span
@@ -141,13 +168,16 @@ function App() {
             <Sidebar
               ref={searchRef}
               activeId={active.id}
-              onSelect={setActiveId}
+              onSelect={selectTool}
               query={query}
               onQueryChange={setQuery}
               onDetectClipboard={() => check(true)}
               onAbout={() => setAboutOpen(true)}
               onSettings={() => setSettingsOpen(true)}
               hasUpdate={hasUpdate}
+              favorites={favorites}
+              recents={recents}
+              onToggleFavorite={toggleFavorite}
             />
           }
           second={mainPane}

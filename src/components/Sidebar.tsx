@@ -1,7 +1,17 @@
-import { forwardRef, useEffect, useMemo } from "react";
-import { ChevronRight, ClipboardPaste, Info, Search, Settings, Wifi, Wrench } from "lucide-react";
+import { forwardRef, useEffect, useMemo, type ComponentType } from "react";
+import {
+  ChevronRight,
+  ClipboardPaste,
+  History,
+  Info,
+  Search,
+  Settings,
+  Star,
+  Wifi,
+  Wrench,
+} from "lucide-react";
 import { useLocalStorage } from "../hooks/useLocalStorage";
-import { TOOLS } from "../tools/registry";
+import { TOOLS, TOOLS_BY_ID } from "../tools/registry";
 import {
   CATEGORY_ICONS,
   CATEGORY_LABELS,
@@ -30,6 +40,9 @@ export const Sidebar = forwardRef<
     onAbout: () => void;
     onSettings: () => void;
     hasUpdate?: boolean;
+    favorites: string[];
+    recents: string[];
+    onToggleFavorite: (id: string) => void;
   }
 >(function Sidebar(
   {
@@ -41,6 +54,9 @@ export const Sidebar = forwardRef<
     onAbout,
     onSettings,
     hasUpdate,
+    favorites,
+    recents,
+    onToggleFavorite,
   },
   searchRef,
 ) {
@@ -61,6 +77,88 @@ export const Sidebar = forwardRef<
     () => CATEGORY_ORDER.filter((c) => filtered.some((t) => t.category === c)),
     [filtered],
   );
+
+  const favoriteTools = useMemo(
+    () => favorites.map((id) => TOOLS_BY_ID.get(id)).filter((t): t is Tool => !!t),
+    [favorites],
+  );
+  const recentTools = useMemo(
+    () =>
+      recents
+        .map((id) => TOOLS_BY_ID.get(id))
+        .filter((t): t is Tool => !!t)
+        .slice(0, 8),
+    [recents],
+  );
+  const hasTopSections = !searching && (favoriteTools.length > 0 || recentTools.length > 0);
+
+  function ToolRow({ t }: { t: Tool }) {
+    const active = t.id === activeId;
+    const Icon = t.icon;
+    const fav = favorites.includes(t.id);
+    return (
+      <div
+        className={`group relative flex items-center rounded-md text-sm transition-colors ${
+          active
+            ? "bg-accent-soft font-medium text-accent-soft-fg ring-1 ring-inset ring-accent/25"
+            : "text-muted hover:bg-surface hover:text-ink"
+        }`}
+      >
+        {active && (
+          <span className="absolute inset-y-1 left-0 w-[3px] rounded-full bg-accent" />
+        )}
+        <button
+          onClick={() => onSelect(t.id)}
+          className="flex min-w-0 flex-1 items-center gap-2 py-1.5 pl-2.5 text-left"
+        >
+          <Icon
+            size={15}
+            className={active ? "text-accent" : "text-muted group-hover:text-ink"}
+          />
+          <span className="truncate">{t.name}</span>
+          {t.needsInternet && (
+            <Wifi
+              size={12}
+              className="ml-auto shrink-0 text-emerald-500"
+              aria-label="Requer internet"
+            />
+          )}
+        </button>
+        <button
+          onClick={() => onToggleFavorite(t.id)}
+          aria-label={fav ? "Desfavoritar" : "Favoritar"}
+          title={fav ? "Desfavoritar" : "Favoritar"}
+          className={`mr-1 grid size-6 shrink-0 place-items-center rounded transition-colors ${
+            fav
+              ? "text-amber-500"
+              : "text-faint opacity-0 hover:text-amber-500 focus-visible:opacity-100 group-hover:opacity-100"
+          }`}
+        >
+          <Star size={13} fill={fav ? "currentColor" : "none"} />
+        </button>
+      </div>
+    );
+  }
+
+  function MiniSection({
+    label,
+    icon: Icon,
+    children,
+  }: {
+    label: string;
+    icon: ComponentType<{ size?: number; className?: string }>;
+    children: React.ReactNode;
+  }) {
+    return (
+      <div className="mb-1">
+        <div className="flex items-center gap-1.5 px-2 py-1.5 text-[11px] font-semibold tracking-wide text-muted uppercase">
+          <Icon size={12} className="shrink-0" />
+          {label}
+        </div>
+        <div className="flex flex-col gap-px">{children}</div>
+      </div>
+    );
+  }
 
   // ao trocar de ferramenta, garante que a categoria dela esteja aberta
   useEffect(() => {
@@ -121,6 +219,21 @@ export const Sidebar = forwardRef<
           </div>
         )}
 
+        {!searching && favoriteTools.length > 0 && (
+          <MiniSection label="Favoritos" icon={Star}>
+            {favoriteTools.map((t) => (
+              <ToolRow key={`fav-${t.id}`} t={t} />
+            ))}
+          </MiniSection>
+        )}
+        {!searching && recentTools.length > 0 && (
+          <MiniSection label="Recentes" icon={History}>
+            {recentTools.map((t) => (
+              <ToolRow key={`rec-${t.id}`} t={t} />
+            ))}
+          </MiniSection>
+        )}
+
         {visibleCats.map((cat, i) => {
           const tools = filtered.filter((t) => t.category === cat);
           const CatIcon = CATEGORY_ICONS[cat];
@@ -129,7 +242,9 @@ export const Sidebar = forwardRef<
           return (
             <div
               key={cat}
-              className={i > 0 ? "mt-2 border-t border-line pt-2" : ""}
+              className={
+                i > 0 || hasTopSections ? "mt-2 border-t border-line pt-2" : ""
+              }
             >
               <button
                 onClick={() =>
@@ -163,39 +278,9 @@ export const Sidebar = forwardRef<
 
               {open && (
                 <div className="mt-1 mb-1 flex flex-col gap-px">
-                  {tools.map((t) => {
-                    const active = t.id === activeId;
-                    const Icon = t.icon;
-                    return (
-                      <button
-                        key={t.id}
-                        onClick={() => onSelect(t.id)}
-                        className={`group relative flex items-center gap-2 rounded-md py-1.5 pr-2 pl-2.5 text-left text-sm transition-colors ${
-                          active
-                            ? "bg-accent-soft font-medium text-accent-soft-fg ring-1 ring-inset ring-accent/25"
-                            : "text-muted hover:bg-surface hover:text-ink"
-                        }`}
-                      >
-                        {active && (
-                          <span className="absolute inset-y-1 left-0 w-[3px] rounded-full bg-accent" />
-                        )}
-                        <Icon
-                          size={15}
-                          className={
-                            active ? "text-accent" : "text-muted group-hover:text-ink"
-                          }
-                        />
-                        <span className="truncate">{t.name}</span>
-                        {t.needsInternet && (
-                          <Wifi
-                            size={12}
-                            className="ml-auto shrink-0 text-emerald-500"
-                            aria-label="Requer internet"
-                          />
-                        )}
-                      </button>
-                    );
-                  })}
+                  {tools.map((t) => (
+                    <ToolRow key={t.id} t={t} />
+                  ))}
                 </div>
               )}
             </div>

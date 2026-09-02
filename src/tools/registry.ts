@@ -1,6 +1,6 @@
 import { lazy } from "react";
 import type { Tool } from "./types";
-import { ArrowLeftRight, Binary, Braces, Building2, Calculator, CalendarDays, CaseSensitive, Clock, Code, FileCode2, FileText, Fingerprint, GitCompare, Hash, IdCard, KeyRound, Landmark, Link2, ListTodo, LockKeyhole, MapPin, Network, Palette, Phone, QrCode, Regex, Send, ShieldCheck, StickyNote, Terminal, Timer, Type } from "lucide-react";
+import { ArrowLeftRight, BarChart3, Binary, Braces, Building2, Calculator, CalendarDays, CaseSensitive, Clock, Code, FileCode2, FileKey, FileText, Fingerprint, GitCompare, Hash, IdCard, KeyRound, Landmark, Link, Link2, ListOrdered, ListTodo, LockKeyhole, MapPin, Network, Palette, Phone, PhoneCall, Quote, QrCode, Regex, ScanBarcode, Send, ShieldCheck, StickyNote, Terminal, Timer, Type } from "lucide-react";
 import { JsonFormatter } from "./json-formatter";
 import { XmlFormatter } from "./xml-formatter";
 import { YamlFormatter } from "./yaml-formatter";
@@ -26,6 +26,13 @@ import { CidrTool } from "./cidr-tool";
 import { ColorTool } from "./color-tool";
 import { CurlTool } from "./curl-tool";
 import { ApiClient } from "./api-client";
+import { LineTools } from "./line-tools";
+import { SlugifyTool } from "./slugify-tool";
+import { TextStatsTool } from "./text-stats-tool";
+import { EscapeTool } from "./escape-tool";
+import { DotenvTool } from "./dotenv-tool";
+import { NfeKeyTool } from "./nfe-key-tool";
+import { DddUfTool } from "./ddd-uf-tool";
 
 // Carregadas sob demanda: puxam libs pesadas (Toast UI Editor, Prettier, mermaid,
 // highlight.js) que só interessam a quem abre a ferramenta.
@@ -109,6 +116,15 @@ export const TOOLS: Tool[] = [
     Component: DataConvert,
   },
   {
+    id: "dotenv",
+    icon: FileKey,
+    name: ".env ↔ JSON",
+    category: "formatters",
+    blurb: "Converter .env para JSON / export / compose e voltar",
+    keywords: ["env", "dotenv", "environment", "variáveis", "json", "export", "compose", "docker"],
+    Component: DotenvTool,
+  },
+  {
     id: "base64",
     icon: Binary,
     name: "Base64",
@@ -161,6 +177,15 @@ export const TOOLS: Tool[] = [
     blurb: "Gerar senhas fortes e hash bcrypt",
     keywords: ["senha", "password", "bcrypt", "gerador", "aleatório"],
     Component: PasswordTool,
+  },
+  {
+    id: "escape",
+    icon: Quote,
+    name: "Escape / Unescape",
+    category: "encoders",
+    blurb: "Escapar strings para JSON, JS, shell, SQL, HTML, URL, regex…",
+    keywords: ["escape", "unescape", "escapar", "string", "json", "shell", "sql", "html", "regex", "csv"],
+    Component: EscapeTool,
   },
   {
     id: "cron",
@@ -278,6 +303,24 @@ export const TOOLS: Tool[] = [
     Component: PixTool,
   },
   {
+    id: "nfe-key",
+    icon: ScanBarcode,
+    name: "Chave NF-e",
+    category: "brasil",
+    blurb: "Decodificar a chave de acesso de 44 dígitos (NF-e / NFC-e)",
+    keywords: ["nfe", "nf-e", "nfce", "nota fiscal", "chave de acesso", "sefaz", "danfe"],
+    Component: NfeKeyTool,
+  },
+  {
+    id: "ddd-uf",
+    icon: PhoneCall,
+    name: "DDD → UF",
+    category: "brasil",
+    blurb: "Descobrir a UF e a região de um DDD, offline",
+    keywords: ["ddd", "uf", "estado", "região", "telefone", "código de área"],
+    Component: DddUfTool,
+  },
+  {
     id: "text-diff",
     icon: GitCompare,
     name: "Diff de texto",
@@ -303,6 +346,33 @@ export const TOOLS: Tool[] = [
     blurb: "camelCase, snake_case, kebab-case, etc.",
     keywords: ["case", "camel", "snake", "kebab", "pascal", "slug"],
     Component: CaseConverter,
+  },
+  {
+    id: "line-tools",
+    icon: ListOrdered,
+    name: "Linhas",
+    category: "text",
+    blurb: "Ordenar, dedupe, filtrar, numerar, juntar/quebrar linhas",
+    keywords: ["linha", "linhas", "ordenar", "sort", "dedupe", "duplicadas", "único", "filtrar", "grep", "numerar", "embaralhar", "reverter"],
+    Component: LineTools,
+  },
+  {
+    id: "slugify",
+    icon: Link,
+    name: "Slugify",
+    category: "text",
+    blurb: "Texto → slug de URL (sem acento, separador, tamanho máx.)",
+    keywords: ["slug", "slugify", "url", "permalink", "kebab", "acento", "amigável"],
+    Component: SlugifyTool,
+  },
+  {
+    id: "text-stats",
+    icon: BarChart3,
+    name: "Estatísticas de texto",
+    category: "text",
+    blurb: "Palavras, caracteres, linhas, frases, bytes, tempo de leitura",
+    keywords: ["contar", "palavras", "caracteres", "linhas", "estatística", "stats", "word count", "bytes", "leitura"],
+    Component: TextStatsTool,
   },
   {
     id: "timestamp",
