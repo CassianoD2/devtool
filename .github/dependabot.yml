@@ -1,12 +1,22 @@
 version: 2
 updates:
+  # GitHub Actions — fixadas em SHA de um major escolhido de propósito
+  # (comentário `# vX` no workflow). O Dependabot propõe só patch/minor dentro
+  # desse major, num PR agrupado; major é bump manual.
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
     commit-message:
       prefix: ci
+    groups:
+      actions:
+        patterns: ["*"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
+  # npm — um PR por grupo (dev / produção) em vez de um por pacote.
   - package-ecosystem: npm
     directory: /
     schedule:
@@ -14,7 +24,15 @@ updates:
     open-pull-requests-limit: 5
     commit-message:
       prefix: chore
+    groups:
+      dev-deps:
+        dependency-type: development
+        patterns: ["*"]
+      prod-deps:
+        dependency-type: production
+        patterns: ["*"]
 
+  # Cargo (crate do app em src-tauri) — um PR agrupado.
   - package-ecosystem: cargo
     directory: /src-tauri
     schedule:
@@ -22,3 +40,6 @@ updates:
     open-pull-requests-limit: 5
     commit-message:
       prefix: chore
+    groups:
+      cargo:
+        patterns: ["*"]
