@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/cassianod2/devtool/compare/v1.6.0...v1.7.0) (2026-09-03)
+
+
+### Features
+
+* Onda 3 — JSON→tipos, assinador de JWT, validadores BR, Referências ([9237e6f](https://github.com/cassianod2/devtool/commit/9237e6ff2b7a5ca9875b6826fd20497d132364e9)), closes [PKCS#8](https://github.com/PKCS/issues/8)
+
 # [1.6.0](https://github.com/cassianod2/devtool/compare/v1.5.0...v1.6.0) (2026-09-03)
 
 
