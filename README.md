@@ -43,11 +43,11 @@ Bibliotecas de apoio: `marked` + `DOMPurify` + `mermaid` + `highlight.js`
 | Categoria | Ferramentas |
 | --- | --- |
 | **Pessoal** | Anotações (bloco de notas Markdown, editor visual Toast UI + botão Formatar/Prettier), Tarefas (checklist com cronômetro de tempo realizado por tarefa, visões dia / semana / mês agrupadas por data, criar tarefa em qualquer dia, carry-over de pendências, bloco "atrasadas"). Exportar/Importar `.json` local. |
-| **Formatadores** | JSON (formatar/minificar/validar/ordenar chaves), XML, YAML, Conversor JSON ↔ YAML ↔ XML |
-| **Encoders & Cripto** | Base64 (texto e arquivo, UTF-8/URL-safe), URL & Query String, JWT (decodificar + verificar HMAC), Hashes (MD5/SHA-1/256/384/512), UUID (v1/v4/v5/v7), Senha & bcrypt |
+| **Formatadores** | JSON (formatar/minificar/validar/ordenar chaves), XML, YAML, Conversor JSON ↔ YAML ↔ XML, **.env ↔ JSON**, **SQL** (formatar/minificar, multi-dialeto), **TOML ↔ JSON**, **JSON ↔ CSV** |
+| **Encoders & Cripto** | Base64 (texto e arquivo, UTF-8/URL-safe), URL & Query String, JWT (decodificar + verificar HMAC), Hashes (MD5/SHA-1/256/384/512), UUID (v1/v4/v5/v7), Senha & bcrypt, **Escape / Unescape** (JSON/JS/shell/SQL/HTML/URL/regex), **TOTP / 2FA** (Base32 ou otpauth://), **Base32 / Base58** |
 | **Sistemas & Rede** | Cron (explicar + próximas execuções), chmod / permissões (octal ↔ simbólico, bits especiais, umask), CIDR / Sub-rede (IPv4), **cURL / HTTP**¹ (analisar comando, converter para fetch/HTTPie/wget/PowerShell, disparar), **API Client**¹ (cliente HTTP tipo Postman: params, headers, body, auth, requests salvos, histórico, variáveis `{{…}}`) |
-| **Consultas BR** | **CEP**¹ (ViaCEP + fallback BrasilAPI), **CNPJ**¹, **DDD**¹, **Bancos**¹, **Feriados**¹, CPF / CNPJ (validar e gerar, offline), PIX Copia e Cola (gerar/decodificar o BR Code EMV) |
-| **Texto & Cores** | Diff de texto, Regex (grupos, flags, presets), Conversor de case, Epoch ↔ Data (com fuso), Base numérica (bin/oct/dec/hex, BigInt), Lorem Ipsum, Cor & Contraste (hex/rgb/hsl/hsv + WCAG), **Markdown Preview** (GFM, realce de código, diagramas Mermaid — carregado sob demanda) |
+| **Consultas BR** | **CEP**¹ (ViaCEP + fallback BrasilAPI), **CNPJ**¹, **DDD**¹, **Bancos**¹, Feriados (nacionais, calculado offline), DDD → UF (offline), CPF / CNPJ (validar e gerar, offline), PIX Copia e Cola (gerar/decodificar o BR Code EMV), Chave NF-e (44 dígitos), Boleto (linha digitável / código de barras) |
+| **Texto & Cores** | Diff de texto, Regex (grupos, flags, presets), Conversor de case, Epoch ↔ Data (com fuso), Base numérica (bin/oct/dec/hex, BigInt), Lorem Ipsum, Cor & Contraste (hex/rgb/hsl/hsv + WCAG), **Linhas** (ordenar/dedupe/filtrar/numerar/juntar-quebrar), **Slugify**, **Estatísticas de texto**, **Inspetor Unicode**, **Markdown Preview** (GFM, realce de código, diagramas Mermaid — carregado sob demanda) |
 
 ¹ Precisa de conexão com a internet.
 
@@ -123,7 +123,13 @@ Windows → *Mais informações* → *Executar assim mesmo* no aviso do SmartScr
 
 ## Recursos da interface
 
-- **`Ctrl+K`** foca a busca da barra lateral.
+- **`Ctrl+K`** abre a **paleta de comandos** (pular pra qualquer ferramenta +
+  ações: mudar tema, favoritar, colar e detectar, abrir Configurações/Sobre;
+  navegação por teclado).
+- **Favoritos e Recentes:** estrela na barra lateral (e no header) fixa a
+  ferramenta; seções “★ Favoritos” e “Recentes” no topo da barra.
+- **Histórico por ferramenta:** nas ferramentas de entrada→saída, um menu 🕘
+  guarda as últimas entradas para restaurar.
 - **Categorias retráteis:** clique no título para recolher/expandir (mostra um
   contador quando recolhida); "recolher tudo / expandir tudo" no topo. O estado é
   salvo; a categoria da ferramenta ativa abre sozinha; durante uma busca, tudo

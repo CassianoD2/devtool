@@ -1,8 +1,10 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { ToolBody, TwoPane, PaneHeading } from "./ToolLayout";
 import { CodeArea, type CodeLang } from "./ui/CodeArea";
+import { HistoryMenu } from "./ui/HistoryMenu";
 import { Button, CopyButton, ErrorNote } from "./ui/primitives";
 import { useTextTransform } from "../hooks/useTextTransform";
+import { useToolHistory } from "../hooks/useToolHistory";
 
 /**
  * Standard input → output tool. `transform` returns the output string or throws
@@ -33,6 +35,14 @@ export function TransformTool({
     deps,
     sample,
   );
+  const { history, push, clear: clearHistory } = useToolHistory(toolId);
+
+  // guarda a entrada no histórico ~1,5s depois de parar de digitar
+  useEffect(() => {
+    if (!input.trim()) return;
+    const t = setTimeout(() => push(input), 1500);
+    return () => clearTimeout(t);
+  }, [input, push]);
 
   return (
     <ToolBody
@@ -56,7 +66,12 @@ export function TransformTool({
         storageKey={`tt:${toolId}`}
         left={
           <>
-            <PaneHeading title="Entrada" />
+            <PaneHeading
+              title="Entrada"
+              actions={
+                <HistoryMenu history={history} onPick={setInput} onClear={clearHistory} />
+              }
+            />
             <CodeArea
               value={input}
               onChange={setInput}

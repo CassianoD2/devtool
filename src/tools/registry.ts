@@ -1,6 +1,6 @@
 import { lazy } from "react";
 import type { Tool } from "./types";
-import { ArrowLeftRight, BarChart3, Binary, Braces, Building2, Calculator, CalendarDays, CaseSensitive, Clock, Code, FileCode2, FileKey, FileText, Fingerprint, GitCompare, Hash, IdCard, KeyRound, Landmark, Link, Link2, ListOrdered, ListTodo, LockKeyhole, MapPin, Network, Palette, Phone, PhoneCall, Quote, QrCode, Regex, ScanBarcode, Send, ShieldCheck, StickyNote, Terminal, Timer, Type } from "lucide-react";
+import { ArrowLeftRight, Barcode, BarChart3, Binary, Blocks, Braces, Building2, Calculator, CalendarDays, CaseSensitive, Clock, Code, Database, FileCode2, FileCog, FileKey, FileText, Fingerprint, GitCompare, Hash, IdCard, KeyRound, Landmark, Languages, Link, Link2, ListOrdered, ListTodo, LockKeyhole, MapPin, Network, Palette, Phone, PhoneCall, Quote, QrCode, Regex, ScanBarcode, Send, Shield, ShieldCheck, StickyNote, Table, Terminal, Timer, Type } from "lucide-react";
 import { JsonFormatter } from "./json-formatter";
 import { XmlFormatter } from "./xml-formatter";
 import { YamlFormatter } from "./yaml-formatter";
@@ -33,6 +33,11 @@ import { EscapeTool } from "./escape-tool";
 import { DotenvTool } from "./dotenv-tool";
 import { NfeKeyTool } from "./nfe-key-tool";
 import { DddUfTool } from "./ddd-uf-tool";
+import { JsonCsvTool } from "./json-csv-tool";
+import { BasencTool } from "./basenc-tool";
+import { TotpTool } from "./totp-tool";
+import { BoletoTool } from "./boleto-tool";
+import { UnicodeTool } from "./unicode-tool";
 
 // Carregadas sob demanda: puxam libs pesadas (Toast UI Editor, Prettier, mermaid,
 // highlight.js) que só interessam a quem abre a ferramenta.
@@ -44,6 +49,13 @@ const NotesTool = lazy(() =>
 );
 const TasksTool = lazy(() =>
   import("./tasks-tool").then((m) => ({ default: m.TasksTool })),
+);
+// sql-formatter (~150 kB) e smol-toml só carregam ao abrir a ferramenta.
+const SqlFormatTool = lazy(() =>
+  import("./sql-format-tool").then((m) => ({ default: m.SqlFormatTool })),
+);
+const TomlTool = lazy(() =>
+  import("./toml-tool").then((m) => ({ default: m.TomlTool })),
 );
 
 export const TOOLS: Tool[] = [
@@ -125,6 +137,33 @@ export const TOOLS: Tool[] = [
     Component: DotenvTool,
   },
   {
+    id: "sql-format",
+    icon: Database,
+    name: "SQL",
+    category: "formatters",
+    blurb: "Formatar / minificar SQL (vários dialetos)",
+    keywords: ["sql", "formatar", "beautify", "minificar", "query", "postgres", "mysql", "pretty"],
+    Component: SqlFormatTool,
+  },
+  {
+    id: "toml",
+    icon: FileCog,
+    name: "TOML ↔ JSON",
+    category: "formatters",
+    blurb: "Validar / formatar TOML e converter para JSON e volta",
+    keywords: ["toml", "json", "config", "cargo", "converter", "formatar"],
+    Component: TomlTool,
+  },
+  {
+    id: "json-csv",
+    icon: Table,
+    name: "JSON ↔ CSV",
+    category: "formatters",
+    blurb: "Array de objetos ↔ CSV (RFC 4180, delimitador configurável)",
+    keywords: ["json", "csv", "tabela", "planilha", "converter", "excel", "delimitador"],
+    Component: JsonCsvTool,
+  },
+  {
     id: "base64",
     icon: Binary,
     name: "Base64",
@@ -186,6 +225,24 @@ export const TOOLS: Tool[] = [
     blurb: "Escapar strings para JSON, JS, shell, SQL, HTML, URL, regex…",
     keywords: ["escape", "unescape", "escapar", "string", "json", "shell", "sql", "html", "regex", "csv"],
     Component: EscapeTool,
+  },
+  {
+    id: "totp",
+    icon: Shield,
+    name: "TOTP / 2FA",
+    category: "encoders",
+    blurb: "Código 2FA a partir do segredo Base32 ou link otpauth://",
+    keywords: ["totp", "2fa", "otp", "autenticador", "authenticator", "hotp", "mfa", "otpauth", "google authenticator"],
+    Component: TotpTool,
+  },
+  {
+    id: "basenc",
+    icon: Blocks,
+    name: "Base32 / Base58",
+    category: "encoders",
+    blurb: "Codificar/decodificar texto em Base32 (RFC 4648) ou Base58",
+    keywords: ["base32", "base58", "encode", "decode", "rfc 4648", "bitcoin", "codificar"],
+    Component: BasencTool,
   },
   {
     id: "cron",
@@ -276,12 +333,11 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "holidays",
-    needsInternet: true,
     icon: CalendarDays,
     name: "Feriados",
     category: "brasil",
-    blurb: "Feriados nacionais de um ano",
-    keywords: ["feriado", "holiday", "nacional", "calendário"],
+    blurb: "Feriados nacionais de um ano (calculado offline)",
+    keywords: ["feriado", "holiday", "nacional", "calendário", "páscoa", "carnaval", "offline"],
     Component: HolidaysTool,
   },
   {
@@ -310,6 +366,15 @@ export const TOOLS: Tool[] = [
     blurb: "Decodificar a chave de acesso de 44 dígitos (NF-e / NFC-e)",
     keywords: ["nfe", "nf-e", "nfce", "nota fiscal", "chave de acesso", "sefaz", "danfe"],
     Component: NfeKeyTool,
+  },
+  {
+    id: "boleto",
+    icon: Barcode,
+    name: "Boleto",
+    category: "brasil",
+    blurb: "Decodificar linha digitável / código de barras (banco, valor, vencimento)",
+    keywords: ["boleto", "linha digitável", "código de barras", "febraban", "arrecadação", "vencimento", "fatura"],
+    Component: BoletoTool,
   },
   {
     id: "ddd-uf",
@@ -373,6 +438,15 @@ export const TOOLS: Tool[] = [
     blurb: "Palavras, caracteres, linhas, frases, bytes, tempo de leitura",
     keywords: ["contar", "palavras", "caracteres", "linhas", "estatística", "stats", "word count", "bytes", "leitura"],
     Component: TextStatsTool,
+  },
+  {
+    id: "unicode",
+    icon: Languages,
+    name: "Inspetor Unicode",
+    category: "text",
+    blurb: "Cada caractere: code point, categoria, bytes UTF-8/16, entidade, bloco",
+    keywords: ["unicode", "utf-8", "utf-16", "code point", "codepoint", "entidade", "emoji", "invisível", "normalizar", "nfc", "nfd", "acento"],
+    Component: UnicodeTool,
   },
   {
     id: "timestamp",

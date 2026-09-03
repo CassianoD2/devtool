@@ -1,6 +1,7 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
-import { ClipboardPaste, Star, Wifi, X } from "lucide-react";
+import { ClipboardPaste, Cog, Info, Star, SunMoon, Wifi, X } from "lucide-react";
 import { About } from "./components/About";
+import { CommandPalette, type PaletteAction } from "./components/CommandPalette";
 import { Settings } from "./components/Settings";
 import { Sidebar } from "./components/Sidebar";
 import { SplitPane } from "./components/ui/SplitPane";
@@ -8,6 +9,7 @@ import { ToastProvider } from "./components/ui/Toast";
 import { Button } from "./components/ui/primitives";
 import { CATEGORY_LABELS } from "./tools/types";
 import { useLocalStorage } from "./hooks/useLocalStorage";
+import { useTheme } from "./hooks/useTheme";
 import { useClipboardDetect } from "./hooks/useClipboardDetect";
 import type { Suggestion } from "./lib/detect";
 import { getAppVersion, isNewer, type ReleaseInfo } from "./lib/update";
@@ -19,8 +21,10 @@ function App() {
   const [nonce, setNonce] = useState(0);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const { hit, check, dismiss } = useClipboardDetect();
+  const { dark, setTheme } = useTheme();
 
   const [foundRelease] = useLocalStorage<ReleaseInfo | null>("devtool:updates:release", null);
   const [appVer, setAppVer] = useState<string | null>(null);
@@ -67,13 +71,40 @@ function App() {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        searchRef.current?.focus();
-        searchRef.current?.select();
+        setPaletteOpen((o) => !o);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
+
+  const paletteActions: PaletteAction[] = [
+    {
+      id: "theme",
+      label: `Tema: mudar para ${dark ? "claro" : "escuro"}`,
+      hint: "Aparência",
+      icon: SunMoon,
+      run: () => setTheme(dark ? "light" : "dark"),
+    },
+    {
+      id: "favorite",
+      label: favorites.includes(active.id)
+        ? `Desfavoritar “${active.name}”`
+        : `Favoritar “${active.name}”`,
+      hint: "Barra lateral",
+      icon: Star,
+      run: () => toggleFavorite(active.id),
+    },
+    {
+      id: "detect",
+      label: "Colar e detectar ferramenta",
+      hint: "Área de transferência",
+      icon: ClipboardPaste,
+      run: () => check(true),
+    },
+    { id: "settings", label: "Abrir Configurações", hint: "Ação", icon: Cog, run: () => setSettingsOpen(true) },
+    { id: "about", label: "Abrir Sobre", hint: "Ação", icon: Info, run: () => setAboutOpen(true) },
+  ];
 
   const ActiveIcon = active.icon;
   const mainPane = (
@@ -183,6 +214,12 @@ function App() {
           second={mainPane}
         />
       </div>
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        onSelectTool={selectTool}
+        actions={paletteActions}
+      />
       <Settings open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <About open={aboutOpen} onClose={() => setAboutOpen(false)} />
     </ToastProvider>

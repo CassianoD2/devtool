@@ -1,12 +1,9 @@
+import { useState } from "react";
 import { ApiTool, DefList } from "../components/ApiTool";
-import {
-  lookupCep,
-  lookupCnpj,
-  lookupDdd,
-  listBanks,
-  listHolidays,
-  type Bank,
-} from "../lib/brasilapi";
+import { ToolBody, PaneHeading } from "../components/ToolLayout";
+import { Input } from "../components/ui/primitives";
+import { lookupCep, lookupCnpj, lookupDdd, listBanks, type Bank } from "../lib/brasilapi";
+import { nationalHolidays } from "../lib/holidays";
 
 export function CepTool() {
   return (
@@ -131,28 +128,49 @@ export function BanksTool() {
 }
 
 export function HolidaysTool() {
+  const [year, setYear] = useState(new Date().getFullYear());
+  const days = nationalHolidays(year);
+
   return (
-    <ApiTool
-      toolId="holidays"
-      placeholder={String(new Date().getFullYear())}
-      sample={String(new Date().getFullYear())}
-      run={(q) => listHolidays(Number(q || new Date().getFullYear()))}
-      renderResult={(days) => (
-        <table className="w-full text-sm">
-          <tbody>
-            {days.map((h) => (
-              <tr
-                key={h.date}
-                className="border-b border-line last:border-0"
-              >
-                <td className="px-2 py-1.5 font-mono text-muted">{h.date}</td>
-                <td className="px-2 py-1.5">{h.name}</td>
-                <td className="px-2 py-1.5 text-xs text-faint">{h.type}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    />
+    <ToolBody
+      toolbar={
+        <label className="inline-flex items-center gap-1.5 text-sm text-muted">
+          Ano
+          <Input
+            type="number"
+            value={year}
+            min={1900}
+            max={2200}
+            onChange={(e) => setYear(Number(e.currentTarget.value) || year)}
+            className="w-24"
+          />
+        </label>
+      }
+    >
+      <div className="flex h-full min-h-0 flex-col gap-1.5">
+        <PaneHeading title={`Feriados nacionais de ${year}`} />
+        <div className="min-h-0 flex-1 overflow-auto rounded-lg border border-line">
+          <table className="w-full text-sm">
+            <tbody>
+              {days.map((h) => (
+                <tr key={h.date + h.name} className="border-b border-line last:border-0">
+                  <td className="px-3 py-1.5 font-mono text-muted">
+                    {h.date.split("-").reverse().join("/")}
+                  </td>
+                  <td className="px-3 py-1.5 text-ink">{h.name}</td>
+                  <td className="px-3 py-1.5 text-right text-xs text-faint">
+                    {h.type === "facultativo" ? "ponto facultativo" : "nacional"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="text-xs text-faint">
+          Calculado offline (Páscoa por computus + datas fixas). Não inclui feriados
+          estaduais/municipais.
+        </p>
+      </div>
+    </ToolBody>
   );
 }
