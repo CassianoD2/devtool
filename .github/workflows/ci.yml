@@ -126,6 +126,10 @@ jobs:
       contents: write
     strategy:
       fail-fast: false
+      # Serializado de propósito: 3 tauri-action concorrentes disputam o mesmo
+      # Release rascunho e chegam a criar um 2º release pra mesma tag, espalhando
+      # os assets (Win/macOS sumiam da v1.7.0). Um de cada vez elimina a corrida.
+      max-parallel: 1
       matrix:
         include:
           - { os: ubuntu-22.04, args: "" }
@@ -256,6 +260,13 @@ jobs:
             tag="v${{ needs.version.outputs.version }}"
           fi
 
+          # 1 release por tag (o race do tauri-action já criou tags com 2)
+          n_rel=$(gh api "repos/${GH_REPO}/releases?per_page=100" \
+            --jq "[.[] | select(.tag_name==\"$tag\")] | length")
+          if [ "$n_rel" != "1" ]; then
+            echo "::error::$n_rel releases para a tag $tag (esperado 1)"; exit 1
+          fi
+
           # notas do release (só quando o semantic-release rodou; no dispatch fica vazio)
           if [ -n "${NOTES:-}" ]; then
             printf '%s\n' "$NOTES" > /tmp/notes.md
@@ -268,6 +279,18 @@ jobs:
           rm -f SHA256SUMS.txt
           sha256sum * > SHA256SUMS.txt
           gh release upload "$tag" SHA256SUMS.txt --clobber
+
+          # confere que os 9 bundles das 3 plataformas chegaram
+          missing=""
+          for pat in "*.rpm" "*_amd64.deb" "*.AppImage" "*_linux-x64_portable.tar.gz" \
+                     "*_universal.dmg" "*universal.app.tar.gz" \
+                     "*_x64-setup.exe" "*_x64_en-US.msi" "*_windows-x64_portable.zip"; do
+            ls $pat >/dev/null 2>&1 || missing="$missing $pat"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::assets faltando na $tag:$missing — rascunho NÃO publicado"
+            exit 1
+          fi
 
           # promove o rascunho a release público (marca como "latest" — no
           # workflow_dispatch, só recompile a tag mais recente para não mexer nisso)
