@@ -3,7 +3,7 @@
 Aplicativo **desktop** que junta num só lugar as utilidades que a gente sempre
 acaba procurando em cinco abas diferentes (e no Postman): formatadores, encoders,
 cripto, consultas a APIs públicas brasileiras, ferramentas de rede e de texto.
-**30 ferramentas**, janela nativa leve (Tauri), sem Electron e sem servidor.
+**50 ferramentas**, janela nativa leve (Tauri), sem Electron e sem servidor.
 
 ## 100% offline
 
@@ -15,7 +15,7 @@ arquivos locais, não a rede. Uma **CSP restritiva** em `src-tauri/tauri.conf.js
 script, estilo ou conexão externa.
 
 As poucas ferramentas que **precisam** de rede para funcionar — CEP, CNPJ, DDD,
-Bancos, Feriados, cURL/HTTP, API Client — fazem as requisições pelo **backend
+Bancos, cURL/HTTP, API Client — fazem as requisições pelo **backend
 Rust** (não pelo `fetch` da webview) e exibem um selo verde **"Conexão com
 internet necessária"** no cabeçalho, além de um ícone de Wi-Fi na barra lateral.
 
@@ -30,7 +30,7 @@ internet necessária"** no cabeçalho, além de um ícone de Wi-Fi na barra late
 | **Shell nativo** | **Rust** (edition 2021) — **~18 linhas** | Só registra os plugins do Tauri; nenhuma lógica de negócio no backend. |
 | Runtime desktop | **Tauri 2** | WebView do sistema (WebKitGTK no Linux) — binário de ~25 MB. |
 | Build / dev server | **Vite 7** | |
-| Testes | **Vitest** | 136 testes sobre as funções puras de `src/lib`. |
+| Testes | **Vitest** | 316 testes sobre as funções puras de `src/lib`. |
 | Ícones | **lucide-react** | |
 | CI/CD | **YAML** (GitHub Actions) + **semantic-release** (Node) | |
 
@@ -43,10 +43,10 @@ Bibliotecas de apoio: `marked` + `DOMPurify` + `mermaid` + `highlight.js`
 | Categoria | Ferramentas |
 | --- | --- |
 | **Pessoal** | Anotações (bloco de notas Markdown, editor visual Toast UI + botão Formatar/Prettier), Tarefas (checklist com cronômetro de tempo realizado por tarefa, visões dia / semana / mês agrupadas por data, criar tarefa em qualquer dia, carry-over de pendências, bloco "atrasadas"). Exportar/Importar `.json` local. |
-| **Formatadores** | JSON (formatar/minificar/validar/ordenar chaves), XML, YAML, Conversor JSON ↔ YAML ↔ XML, **.env ↔ JSON**, **SQL** (formatar/minificar, multi-dialeto), **TOML ↔ JSON**, **JSON ↔ CSV** |
-| **Encoders & Cripto** | Base64 (texto e arquivo, UTF-8/URL-safe), URL & Query String, JWT (decodificar + verificar HMAC), Hashes (MD5/SHA-1/256/384/512), UUID (v1/v4/v5/v7), Senha & bcrypt, **Escape / Unescape** (JSON/JS/shell/SQL/HTML/URL/regex), **TOTP / 2FA** (Base32 ou otpauth://), **Base32 / Base58** |
-| **Sistemas & Rede** | Cron (explicar + próximas execuções), chmod / permissões (octal ↔ simbólico, bits especiais, umask), CIDR / Sub-rede (IPv4), **cURL / HTTP**¹ (analisar comando, converter para fetch/HTTPie/wget/PowerShell, disparar), **API Client**¹ (cliente HTTP tipo Postman: params, headers, body, auth, requests salvos, histórico, variáveis `{{…}}`) |
-| **Consultas BR** | **CEP**¹ (ViaCEP + fallback BrasilAPI), **CNPJ**¹, **DDD**¹, **Bancos**¹, Feriados (nacionais, calculado offline), DDD → UF (offline), CPF / CNPJ (validar e gerar, offline), PIX Copia e Cola (gerar/decodificar o BR Code EMV), Chave NF-e (44 dígitos), Boleto (linha digitável / código de barras) |
+| **Formatadores** | JSON (formatar/minificar/validar/ordenar chaves), XML, YAML, Conversor JSON ↔ YAML ↔ XML, **.env ↔ JSON**, **SQL** (formatar/minificar, multi-dialeto), **TOML ↔ JSON**, **JSON ↔ CSV**, **JSON → tipos** (interface TS / struct Go / Zod / DDL SQL) |
+| **Encoders & Cripto** | Base64 (texto e arquivo, UTF-8/URL-safe), URL & Query String, JWT (decodificar + verificar HMAC), Hashes (MD5/SHA-1/256/384/512), UUID (v1/v4/v5/v7), Senha & bcrypt, **Escape / Unescape** (JSON/JS/shell/SQL/HTML/URL/regex), **TOTP / 2FA** (Base32 ou otpauth://), **Assinar JWT** (HS*/RS*/ES*), **Base32 / Base58** |
+| **Sistemas & Rede** | Cron (explicar + próximas execuções), chmod / permissões (octal ↔ simbólico, bits especiais, umask), CIDR / Sub-rede (IPv4), **Referências** (HTTP status, MIME, portas, DNS SPF/DKIM/DMARC, regex), **cURL / HTTP**¹ (analisar comando, converter para fetch/HTTPie/wget/PowerShell, disparar), **API Client**¹ (cliente HTTP tipo Postman: params, headers, body, auth, requests salvos, histórico, variáveis `{{…}}`) |
+| **Consultas BR** | **CEP**¹ (ViaCEP + fallback BrasilAPI), **CNPJ**¹, **DDD**¹, **Bancos**¹, Feriados (nacionais, calculado offline), DDD → UF (offline), CPF / CNPJ (validar e gerar, offline), PIX Copia e Cola (gerar/decodificar o BR Code EMV), Chave NF-e (44 dígitos), Boleto (linha digitável / código de barras), PIS / Título / RENAVAM / CNH (validar e gerar, offline) |
 | **Texto & Cores** | Diff de texto, Regex (grupos, flags, presets), Conversor de case, Epoch ↔ Data (com fuso), Base numérica (bin/oct/dec/hex, BigInt), Lorem Ipsum, Cor & Contraste (hex/rgb/hsl/hsv + WCAG), **Linhas** (ordenar/dedupe/filtrar/numerar/juntar-quebrar), **Slugify**, **Estatísticas de texto**, **Inspetor Unicode**, **Markdown Preview** (GFM, realce de código, diagramas Mermaid — carregado sob demanda) |
 
 ¹ Precisa de conexão com a internet.

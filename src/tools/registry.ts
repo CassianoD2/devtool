@@ -1,6 +1,6 @@
 import { lazy } from "react";
 import type { Tool } from "./types";
-import { ArrowLeftRight, Barcode, BarChart3, Binary, Blocks, Braces, Building2, Calculator, CalendarDays, CaseSensitive, Clock, Code, Database, FileCode2, FileCog, FileKey, FileText, Fingerprint, GitCompare, Hash, IdCard, KeyRound, Landmark, Languages, Link, Link2, ListOrdered, ListTodo, LockKeyhole, MapPin, Network, Palette, Phone, PhoneCall, Quote, QrCode, Regex, ScanBarcode, Send, Shield, ShieldCheck, StickyNote, Table, Terminal, Timer, Type } from "lucide-react";
+import { ArrowLeftRight, BadgeCheck, Barcode, BarChart3, Binary, Blocks, Braces, Building2, Calculator, CalendarDays, CaseSensitive, Clock, Code, Database, FileCode2, FileCog, FileKey, FileText, FileType, Fingerprint, GitCompare, Hash, IdCard, KeyRound, Landmark, Languages, Library, Link, Link2, ListOrdered, ListTodo, LockKeyhole, MapPin, Network, Palette, Phone, PhoneCall, Quote, QrCode, Regex, ScanBarcode, Send, Shield, ShieldCheck, Signature, StickyNote, Table, Terminal, Timer, Type } from "lucide-react";
 import { JsonFormatter } from "./json-formatter";
 import { XmlFormatter } from "./xml-formatter";
 import { YamlFormatter } from "./yaml-formatter";
@@ -38,6 +38,10 @@ import { BasencTool } from "./basenc-tool";
 import { TotpTool } from "./totp-tool";
 import { BoletoTool } from "./boleto-tool";
 import { UnicodeTool } from "./unicode-tool";
+import { JsonTypesTool } from "./json-types-tool";
+import { JwtSignTool } from "./jwt-sign-tool";
+import { BrDocsExtraTool } from "./brdocs-extra-tool";
+import { ReferenceTool } from "./reference-tool";
 
 // Carregadas sob demanda: puxam libs pesadas (Toast UI Editor, Prettier, mermaid,
 // highlight.js) que só interessam a quem abre a ferramenta.
@@ -164,6 +168,15 @@ export const TOOLS: Tool[] = [
     Component: JsonCsvTool,
   },
   {
+    id: "json-types",
+    icon: FileType,
+    name: "JSON → tipos",
+    category: "formatters",
+    blurb: "Inferir interface TS / struct Go / schema Zod / DDL SQL de um exemplo",
+    keywords: ["json", "typescript", "interface", "go", "struct", "zod", "schema", "ddl", "sql", "tipos", "quicktype"],
+    Component: JsonTypesTool,
+  },
+  {
     id: "base64",
     icon: Binary,
     name: "Base64",
@@ -236,6 +249,15 @@ export const TOOLS: Tool[] = [
     Component: TotpTool,
   },
   {
+    id: "jwt-sign",
+    icon: Signature,
+    name: "Assinar JWT",
+    category: "encoders",
+    blurb: "Gerar JWT assinado (HS256/384/512, RS*, ES*) — par do decodificador",
+    keywords: ["jwt", "assinar", "sign", "hmac", "rs256", "es256", "token", "bearer", "hs256"],
+    Component: JwtSignTool,
+  },
+  {
     id: "basenc",
     icon: Blocks,
     name: "Base32 / Base58",
@@ -270,6 +292,15 @@ export const TOOLS: Tool[] = [
     blurb: "Máscara, rede, broadcast, faixa de hosts (IPv4)",
     keywords: ["cidr", "subnet", "sub-rede", "ip", "máscara", "netmask", "rede"],
     Component: CidrTool,
+  },
+  {
+    id: "reference",
+    icon: Library,
+    name: "Referências",
+    category: "sysadmin",
+    blurb: "Tabelas rápidas: HTTP status, MIME, portas, DNS (SPF/DKIM/DMARC), regex",
+    keywords: ["referência", "http status", "código", "mime", "porta", "dns", "spf", "dkim", "dmarc", "regex", "cola", "cheat sheet"],
+    Component: ReferenceTool,
   },
   {
     id: "curl",
@@ -348,6 +379,15 @@ export const TOOLS: Tool[] = [
     blurb: "Validar e gerar (offline, dígitos verificadores)",
     keywords: ["cpf", "cnpj", "documento", "validar", "gerar", "mod11"],
     Component: BrDocsTool,
+  },
+  {
+    id: "brdocs-extra",
+    icon: BadgeCheck,
+    name: "PIS / Título / RENAVAM / CNH",
+    category: "brasil",
+    blurb: "Validar e gerar os dígitos verificadores (offline)",
+    keywords: ["pis", "pasep", "nit", "título de eleitor", "renavam", "cnh", "carteira de motorista", "validar", "gerar", "dígito verificador"],
+    Component: BrDocsExtraTool,
   },
   {
     id: "pix",
