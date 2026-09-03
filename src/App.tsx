@@ -34,18 +34,10 @@ function App() {
   const hasUpdate = !!foundRelease && !!appVer && isNewer(foundRelease.version, appVer);
 
   const [favorites, setFavorites] = useLocalStorage<string[]>("devtool:favorites", []);
-  const [recents, setRecents] = useLocalStorage<string[]>("devtool:recents", []);
   const toggleFavorite = useCallback(
     (id: string) =>
       setFavorites((f) => (f.includes(id) ? f.filter((x) => x !== id) : [...f, id])),
     [setFavorites],
-  );
-  const selectTool = useCallback(
-    (id: string) => {
-      setActiveId(id);
-      setRecents((r) => [id, ...r.filter((x) => x !== id)].slice(0, 8));
-    },
-    [setActiveId, setRecents],
   );
 
   const active = TOOLS_BY_ID.get(activeId) ?? TOOLS[0];
@@ -60,11 +52,11 @@ function App() {
       } catch {
         /* ignore */
       }
-      selectTool(s.toolId);
+      setActiveId(s.toolId);
       setNonce((n) => n + 1);
       dismiss();
     },
-    [selectTool, dismiss],
+    [setActiveId, dismiss],
   );
 
   useEffect(() => {
@@ -199,7 +191,7 @@ function App() {
             <Sidebar
               ref={searchRef}
               activeId={active.id}
-              onSelect={selectTool}
+              onSelect={setActiveId}
               query={query}
               onQueryChange={setQuery}
               onDetectClipboard={() => check(true)}
@@ -207,7 +199,6 @@ function App() {
               onSettings={() => setSettingsOpen(true)}
               hasUpdate={hasUpdate}
               favorites={favorites}
-              recents={recents}
               onToggleFavorite={toggleFavorite}
             />
           }
@@ -217,7 +208,7 @@ function App() {
       <CommandPalette
         open={paletteOpen}
         onClose={() => setPaletteOpen(false)}
-        onSelectTool={selectTool}
+        onSelectTool={setActiveId}
         actions={paletteActions}
       />
       <Settings open={settingsOpen} onClose={() => setSettingsOpen(false)} />

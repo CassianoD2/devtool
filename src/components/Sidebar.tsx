@@ -2,7 +2,6 @@ import { forwardRef, useEffect, useMemo, type ComponentType } from "react";
 import {
   ChevronRight,
   ClipboardPaste,
-  History,
   Info,
   Search,
   Settings,
@@ -41,7 +40,6 @@ export const Sidebar = forwardRef<
     onSettings: () => void;
     hasUpdate?: boolean;
     favorites: string[];
-    recents: string[];
     onToggleFavorite: (id: string) => void;
   }
 >(function Sidebar(
@@ -55,7 +53,6 @@ export const Sidebar = forwardRef<
     onSettings,
     hasUpdate,
     favorites,
-    recents,
     onToggleFavorite,
   },
   searchRef,
@@ -82,15 +79,7 @@ export const Sidebar = forwardRef<
     () => favorites.map((id) => TOOLS_BY_ID.get(id)).filter((t): t is Tool => !!t),
     [favorites],
   );
-  const recentTools = useMemo(
-    () =>
-      recents
-        .map((id) => TOOLS_BY_ID.get(id))
-        .filter((t): t is Tool => !!t)
-        .slice(0, 8),
-    [recents],
-  );
-  const hasTopSections = !searching && (favoriteTools.length > 0 || recentTools.length > 0);
+  const hasTopSections = !searching && favoriteTools.length > 0;
 
   function ToolRow({ t }: { t: Tool }) {
     const active = t.id === activeId;
@@ -223,13 +212,6 @@ export const Sidebar = forwardRef<
           <MiniSection label="Favoritos" icon={Star}>
             {favoriteTools.map((t) => (
               <ToolRow key={`fav-${t.id}`} t={t} />
-            ))}
-          </MiniSection>
-        )}
-        {!searching && recentTools.length > 0 && (
-          <MiniSection label="Recentes" icon={History}>
-            {recentTools.map((t) => (
-              <ToolRow key={`rec-${t.id}`} t={t} />
             ))}
           </MiniSection>
         )}
