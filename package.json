@@ -1,7 +1,7 @@
 {
   "name": "devtool",
   "private": true,
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Canivete suíço para desenvolvimento — app desktop offline (Tauri + React) com formatadores, encoders, consultas BR, rede e texto.",
   "license": "MIT",
   "author": "Cassiano Mesquita (https://cassianomesquita.dev)",

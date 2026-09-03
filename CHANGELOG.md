@@ -1,3 +1,15 @@
+# [1.6.0](https://github.com/cassianod2/devtool/compare/v1.5.0...v1.6.0) (2026-09-03)
+
+
+### Bug Fixes
+
+* **sidebar:** remove a seção "Recentes" da barra lateral ([9008e8d](https://github.com/cassianod2/devtool/commit/9008e8dc4270b449bf24ec72866c7d9479f84b83))
+
+
+### Features
+
+* Onda 2 — SQL/TOML/CSV, TOTP, Base32/58, boleto, Unicode, paleta, histórico ([51092d3](https://github.com/cassianod2/devtool/commit/51092d378d23c920815fc53aabc5be2d2d18e6fb))
+
 # [1.5.0](https://github.com/cassianod2/devtool/compare/v1.4.1...v1.5.0) (2026-09-02)
 
 
