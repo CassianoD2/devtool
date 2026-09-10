@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/cassianod2/devtool/compare/v1.7.0...v1.8.0) (2026-09-10)
+
+
+### Features
+
+* API Client vira workspace dedicado (coleções, ambientes, histórico, Postman) ([5e419ed](https://github.com/cassianod2/devtool/commit/5e419eda81c69b5c6ffa2f0f7a7aad7a51bb4f1e))
+
 # [1.7.0](https://github.com/cassianod2/devtool/compare/v1.6.0...v1.7.0) (2026-09-03)
 
 
