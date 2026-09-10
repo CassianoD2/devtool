@@ -1,63 +1,23 @@
 import type { ParsedRequest } from "./curl";
+import {
+  emptyKV,
+  emptyRequest,
+  uid,
+  type KV,
+  type MultipartField,
+  type RequestSpec,
+} from "./apiclient-model";
 
-export type BodyMode = "none" | "json" | "text" | "form";
-export type AuthType = "none" | "bearer" | "basic" | "apikey";
-
-export interface KV {
-  id: string;
-  key: string;
-  value: string;
-  enabled: boolean;
-}
-
-export interface RequestSpec {
-  id: string;
-  name: string;
-  method: string;
-  url: string;
-  headers: KV[];
-  auth: {
-    type: AuthType;
-    token: string;
-    user: string;
-    pass: string;
-    apikeyName: string;
-    apikeyValue: string;
-    apikeyIn: "header" | "query";
-  };
-  body: { mode: BodyMode; text: string; form: KV[] };
-}
-
-export const METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"];
-
-const uid = () =>
-  typeof crypto !== "undefined" && crypto.randomUUID
-    ? crypto.randomUUID()
-    : Math.random().toString(36).slice(2);
-
-export function emptyKV(): KV {
-  return { id: uid(), key: "", value: "", enabled: true };
-}
-
-export function emptyRequest(): RequestSpec {
-  return {
-    id: uid(),
-    name: "",
-    method: "GET",
-    url: "",
-    headers: [emptyKV()],
-    auth: {
-      type: "none",
-      token: "",
-      user: "",
-      pass: "",
-      apikeyName: "",
-      apikeyValue: "",
-      apikeyIn: "header",
-    },
-    body: { mode: "none", text: "", form: [emptyKV()] },
-  };
-}
+export {
+  METHODS,
+  emptyKV,
+  emptyRequest,
+  type KV,
+  type MultipartField,
+  type RequestSpec,
+  type BodyMode,
+  type AuthType,
+} from "./apiclient-model";
 
 /** Replace {{name}} with an enabled variable's value (leaves unknown vars as-is). */
 export function resolveVars(text: string, vars: KV[]): string {
@@ -107,6 +67,27 @@ export function setQueryParams(
   return (q ? `${path}?${q}` : path) + (hash ? `#${hash}` : "");
 }
 
+// ---------- multipart ----------
+
+/**
+ * Monta um corpo `multipart/form-data` em texto puro (campos de texto apenas).
+ * Retorna o corpo e o Content-Type com o boundary gerado.
+ */
+export function buildMultipartBody(
+  fields: { key: string; value: string }[],
+): { body: string; contentType: string } {
+  const boundary = `----DevToolFormBoundary${uid().replace(/-/g, "")}`;
+  const CRLF = "\r\n";
+  const parts = fields.map(
+    (f) =>
+      `--${boundary}${CRLF}` +
+      `Content-Disposition: form-data; name="${f.key}"${CRLF}${CRLF}` +
+      `${f.value}${CRLF}`,
+  );
+  const body = parts.join("") + `--${boundary}--${CRLF}`;
+  return { body, contentType: `multipart/form-data; boundary=${boundary}` };
+}
+
 // ---------- build a sendable request ----------
 
 export function toSendable(spec: RequestSpec, vars: KV[]): ParsedRequest {
@@ -146,6 +127,13 @@ export function toSendable(spec: RequestSpec, vars: KV[]): ParsedRequest {
       .map((f) => `${encodeURIComponent(r(f.key))}=${encodeURIComponent(r(f.value))}`)
       .join("&");
     if (!hasCT) headers.push(["Content-Type", "application/x-www-form-urlencoded"]);
+  } else if (spec.body.mode === "multipart") {
+    const fields = spec.body.multipart
+      .filter((f) => f.enabled && f.key.trim())
+      .map((f) => ({ key: r(f.key), value: r(f.value) }));
+    const built = buildMultipartBody(fields);
+    body = built.body;
+    if (!hasCT) headers.push(["Content-Type", built.contentType]);
   }
 
   return {
@@ -154,8 +142,9 @@ export function toSendable(spec: RequestSpec, vars: KV[]): ParsedRequest {
     headers,
     body: body || undefined,
     auth,
-    insecure: false,
-    followRedirects: true,
+    insecure: spec.options.insecure,
+    followRedirects: spec.options.followRedirects,
+    timeoutMs: spec.options.timeoutMs ?? undefined,
     warnings: [],
   };
 }
@@ -180,7 +169,10 @@ export function specFromParsed(p: ParsedRequest, name = ""): RequestSpec {
       mode: looksJson ? "json" : "text",
       text: p.body,
       form: [emptyKV()],
+      multipart: [{ id: uid(), key: "", value: "", enabled: true, kind: "text" } as MultipartField],
     };
   }
+  spec.options.followRedirects = p.followRedirects;
+  spec.options.insecure = p.insecure;
   return spec;
 }

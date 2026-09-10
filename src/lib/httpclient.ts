@@ -32,8 +32,25 @@ export async function sendRequest(req: ParsedRequest): Promise<HttpResult> {
     init.danger = req.insecure ? { acceptInvalidCerts: true, acceptInvalidHostnames: true } : undefined;
   }
 
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  if (req.timeoutMs && req.timeoutMs > 0) {
+    const ctrl = new AbortController();
+    init.signal = ctrl.signal;
+    timer = setTimeout(() => ctrl.abort(), req.timeoutMs);
+  }
+
   const started = performance.now();
-  const res = await doFetch(req.url, init);
+  let res: Awaited<ReturnType<typeof doFetch>>;
+  try {
+    res = await doFetch(req.url, init);
+  } catch (err) {
+    if (timer) clearTimeout(timer);
+    if (err instanceof DOMException && err.name === "AbortError") {
+      throw new Error(`Tempo esgotado após ${req.timeoutMs} ms.`);
+    }
+    throw err;
+  }
+  if (timer) clearTimeout(timer);
   const body = await res.text();
   const timeMs = Math.round(performance.now() - started);
 

@@ -8,6 +8,8 @@ export interface ParsedRequest {
   auth?: { user: string; pass: string };
   insecure: boolean;
   followRedirects: boolean;
+  /** Abortar a requisição após N ms (usado pelo API Client). */
+  timeoutMs?: number;
   warnings: string[];
 }
 

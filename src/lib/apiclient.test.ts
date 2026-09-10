@@ -7,6 +7,7 @@ import {
   toSendable,
   specFromParsed,
   emptyRequest,
+  buildMultipartBody,
   type KV,
 } from "./apiclient";
 import { parseCurl } from "./curl";
@@ -58,7 +59,7 @@ describe("toSendable", () => {
     spec.method = "POST";
     spec.url = "{{base}}/users";
     spec.auth = { ...spec.auth, type: "bearer", token: "{{tok}}" };
-    spec.body = { mode: "json", text: '{"a":1}', form: [] };
+    spec.body = { ...spec.body, mode: "json", text: '{"a":1}' };
 
     const out = toSendable(spec, vars);
     expect(out.url).toBe("https://api.test/users");
@@ -79,6 +80,7 @@ describe("toSendable", () => {
     const spec = emptyRequest();
     spec.url = "https://x";
     spec.body = {
+      ...spec.body,
       mode: "form",
       text: "",
       form: [
@@ -89,6 +91,55 @@ describe("toSendable", () => {
     const out = toSendable(spec, []);
     expect(out.body).toBe("name=fulano%20de%20tal");
     expect(out.headers).toContainEqual(["Content-Type", "application/x-www-form-urlencoded"]);
+  });
+
+  it("builds a multipart body and content-type from multipart rows", () => {
+    const spec = emptyRequest();
+    spec.url = "https://x";
+    spec.body = {
+      ...spec.body,
+      mode: "multipart",
+      multipart: [
+        { id: "a", key: "field", value: "{{tok}}", enabled: true, kind: "text" },
+        { id: "b", key: "off", value: "x", enabled: false, kind: "text" },
+      ],
+    };
+    const out = toSendable(spec, vars);
+    const ct = out.headers.find(([k]) => k === "Content-Type")?.[1] ?? "";
+    expect(ct.startsWith("multipart/form-data; boundary=")).toBe(true);
+    expect(out.body).toContain('name="field"');
+    expect(out.body).toContain("abc123");
+    expect(out.body).not.toContain('name="off"');
+    expect(out.body).toContain("\r\n");
+  });
+
+  it("copies request options onto the sendable request", () => {
+    const spec = emptyRequest();
+    spec.url = "https://x";
+    spec.options = { timeoutMs: 5000, followRedirects: false, insecure: true };
+    const out = toSendable(spec, []);
+    expect(out.timeoutMs).toBe(5000);
+    expect(out.followRedirects).toBe(false);
+    expect(out.insecure).toBe(true);
+  });
+});
+
+describe("buildMultipartBody", () => {
+  it("produces a valid boundary and splits back into N parts", () => {
+    const { body, contentType } = buildMultipartBody([
+      { key: "a", value: "1" },
+      { key: "b", value: "two" },
+    ]);
+    const boundary = contentType.replace("multipart/form-data; boundary=", "");
+    expect(boundary.length).toBeGreaterThan(10);
+    const parts = body.split(`--${boundary}`).filter((p) => p.trim() && p.trim() !== "--");
+    expect(parts).toHaveLength(2);
+  });
+
+  it("still yields a boundary for an empty field list", () => {
+    const { body, contentType } = buildMultipartBody([]);
+    expect(contentType).toMatch(/^multipart\/form-data; boundary=/);
+    expect(body).toContain("--");
   });
 });
 

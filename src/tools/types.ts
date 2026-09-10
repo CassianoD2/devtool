@@ -1,9 +1,10 @@
 import type { ComponentType, LazyExoticComponent } from "react";
 import type { LucideIcon } from "lucide-react";
-import { Braces, Flag, KeyRound, Network, NotebookPen, Type } from "lucide-react";
+import { Braces, Flag, KeyRound, Network, NotebookPen, Send, Type } from "lucide-react";
 
 export type ToolCategory =
   | "personal"
+  | "api"
   | "formatters"
   | "encoders"
   | "sysadmin"
@@ -12,6 +13,7 @@ export type ToolCategory =
 
 export const CATEGORY_LABELS: Record<ToolCategory, string> = {
   personal: "Pessoal",
+  api: "API Client",
   formatters: "Formatadores",
   encoders: "Encoders & Cripto",
   sysadmin: "Sistemas & Rede",
@@ -21,6 +23,7 @@ export const CATEGORY_LABELS: Record<ToolCategory, string> = {
 
 export const CATEGORY_ICONS: Record<ToolCategory, LucideIcon> = {
   personal: NotebookPen,
+  api: Send,
   formatters: Braces,
   encoders: KeyRound,
   sysadmin: Network,
@@ -30,6 +33,7 @@ export const CATEGORY_ICONS: Record<ToolCategory, LucideIcon> = {
 
 export const CATEGORY_ORDER: ToolCategory[] = [
   "personal",
+  "api",
   "formatters",
   "encoders",
   "sysadmin",

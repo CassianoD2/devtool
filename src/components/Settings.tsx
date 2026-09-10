@@ -181,8 +181,8 @@ export function Settings({ open, onClose }: { open: boolean; onClose: () => void
           <Section title="Dados">
             <p className="mb-2 text-xs text-faint">
               Tudo fica só neste computador (localStorage): entradas das ferramentas,
-              requests salvos e histórico do API Client, variáveis, tamanhos de painel,
-              Anotações e Tarefas. As Anotações e Tarefas têm{" "}
+              o workspace do API Client (coleções, ambientes, histórico), tamanhos de
+              painel, Anotações e Tarefas. O API Client, as Anotações e as Tarefas têm{" "}
               <span className="text-muted">Exportar / Importar</span> próprio na barra
               da ferramenta — use antes de limpar.
             </p>
@@ -197,6 +197,7 @@ export function Settings({ open, onClose }: { open: boolean; onClose: () => void
                   return;
                 const keep = localStorage.getItem("devtool:theme");
                 clearKeys("devtool:");
+                clearKeys("apiclient:"); // chaves legadas anteriores à migração
                 if (keep) localStorage.setItem("devtool:theme", keep);
                 window.location.reload();
               }}

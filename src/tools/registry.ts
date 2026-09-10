@@ -25,7 +25,7 @@ import { ChmodTool } from "./chmod-tool";
 import { CidrTool } from "./cidr-tool";
 import { ColorTool } from "./color-tool";
 import { CurlTool } from "./curl-tool";
-import { ApiClient } from "./api-client";
+import { ApiClientWorkspace } from "./api-client";
 import { LineTools } from "./line-tools";
 import { SlugifyTool } from "./slugify-tool";
 import { TextStatsTool } from "./text-stats-tool";
@@ -303,24 +303,24 @@ export const TOOLS: Tool[] = [
     Component: ReferenceTool,
   },
   {
-    id: "curl",
-    needsInternet: true,
-    icon: Terminal,
-    name: "cURL / HTTP",
-    category: "sysadmin",
-    blurb: "Analisar comando curl, converter (fetch/HTTPie/wget/PS) e disparar",
-    keywords: ["curl", "http", "request", "requisição", "api", "rest", "fetch", "httpie", "wget"],
-    Component: CurlTool,
-  },
-  {
     id: "api-client",
     needsInternet: true,
     icon: Send,
     name: "API Client",
-    category: "sysadmin",
-    blurb: "Cliente HTTP tipo Postman: params, headers, body, auth, salvos e variáveis",
-    keywords: ["api", "client", "postman", "insomnia", "rest", "http", "request", "requisição", "endpoint"],
-    Component: ApiClient,
+    category: "api",
+    blurb: "Workspace HTTP: coleções em pastas, ambientes, histórico, params/headers/body/auth",
+    keywords: ["api", "client", "postman", "insomnia", "bruno", "rest", "http", "request", "requisição", "endpoint", "coleção", "ambiente", "environment"],
+    Component: ApiClientWorkspace,
+  },
+  {
+    id: "curl",
+    needsInternet: true,
+    icon: Terminal,
+    name: "cURL / HTTP",
+    category: "api",
+    blurb: "Analisar comando curl, converter (fetch/HTTPie/wget/PS) e disparar",
+    keywords: ["curl", "http", "request", "requisição", "api", "rest", "fetch", "httpie", "wget"],
+    Component: CurlTool,
   },
   {
     id: "cep",
