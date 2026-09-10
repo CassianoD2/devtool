@@ -14,12 +14,18 @@ import {
 import { useTheme, type ThemePref } from "../hooks/useTheme";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { copyToClipboard } from "../lib/clipboard";
-import { openExternal } from "../lib/http";
+import { isTauri, openExternal } from "../lib/http";
 import {
+  canSelfUpdate,
+  checkForUpdate,
+  downloadAndInstallUpdate,
   fetchLatestRelease,
   getAppVersion,
   isNewer,
+  relaunchApp,
+  updateErrorMessage,
   type ReleaseInfo,
+  type UpdateProgress,
 } from "../lib/update";
 import { Button } from "./ui/primitives";
 import { useToast } from "./ui/Toast";
@@ -35,6 +41,14 @@ function clearKeys(prefix: string) {
   keys.forEach((k) => localStorage.removeItem(k));
   return keys.length;
 }
+
+function fmtBytes(n: number): string {
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`;
+  return `${(n / 1024 / 1024).toFixed(1)} MB`;
+}
+
+type InstallPhase = "idle" | "downloading" | "installing" | "done";
 
 const THEME_OPTS: { value: ThemePref; label: string; icon: typeof Sun }[] = [
   { value: "system", label: "Sistema", icon: Monitor },
@@ -65,6 +79,12 @@ export function Settings({ open, onClose }: { open: boolean; onClose: () => void
   const [current, setCurrent] = useState<string | null>(null);
   const [showNotes, setShowNotes] = useState(false);
 
+  const [autoCheck, setAutoCheck] = useLocalStorage("devtool:updates:autocheck", false);
+  const [selfUpdate, setSelfUpdate] = useState(false);
+  const [platform, setPlatform] = useState<string | null>(null);
+  const [inst, setInst] = useState<InstallPhase>("idle");
+  const [prog, setProg] = useState<UpdateProgress | null>(null);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -74,6 +94,17 @@ export function Settings({ open, onClose }: { open: boolean; onClose: () => void
 
   useEffect(() => {
     if (open) getAppVersion().then(setCurrent);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    setInst("idle");
+    setProg(null);
+    if (!isTauri()) return;
+    void canSelfUpdate().then(setSelfUpdate);
+    void import("@tauri-apps/plugin-os")
+      .then((m) => setPlatform(m.platform()))
+      .catch(() => {});
   }, [open]);
 
   useEffect(() => {
@@ -109,6 +140,30 @@ export function Settings({ open, onClose }: { open: boolean; onClose: () => void
       toast("Não abriu o navegador — link copiado.", "error");
     } else {
       toast("Não foi possível abrir nem copiar o link.", "error");
+    }
+  }
+
+  async function installUpdate() {
+    setInst("downloading");
+    setProg(null);
+    try {
+      const handle = await checkForUpdate();
+      if (!handle) {
+        toast("O instalador ainda não tem essa versão — abrindo a página do release.", "error");
+        setInst("idle");
+        await openRelease();
+        return;
+      }
+      await downloadAndInstallUpdate(handle, (p) => {
+        setProg(p);
+        if (p.total !== null && p.downloaded >= p.total) setInst("installing");
+      });
+      setInst("done");
+    } catch (err) {
+      setInst("idle");
+      setProg(null);
+      toast(updateErrorMessage(err), "error");
+      await openRelease();
     }
   }
 
@@ -209,7 +264,8 @@ export function Settings({ open, onClose }: { open: boolean; onClose: () => void
 
           <Section title="Atualizações">
             <p className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-faint">
-              Verifica as releases publicadas no GitHub. Nada é baixado sozinho.
+              Verifica as releases publicadas no GitHub. O download só começa quando
+              você clica em Baixar e instalar.
               <span
                 className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 font-medium text-emerald-600 dark:text-emerald-400"
                 title="Só esta ação usa a internet"
@@ -244,11 +300,41 @@ export function Settings({ open, onClose }: { open: boolean; onClose: () => void
                 {current && (
                   <div className="text-xs text-muted">Você tem a v{current}.</div>
                 )}
-                <div className="mt-2 flex flex-wrap gap-2">
-                  <Button variant="primary" size="sm" onClick={openRelease}>
-                    <Download size={14} />
-                    Baixar
-                  </Button>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  {selfUpdate && inst === "idle" && (
+                    <Button variant="primary" size="sm" onClick={installUpdate}>
+                      <Download size={14} />
+                      Baixar e instalar
+                    </Button>
+                  )}
+                  {selfUpdate && (inst === "downloading" || inst === "installing") && (
+                    <span className="inline-flex items-center gap-2 text-xs text-muted">
+                      <RefreshCw size={14} className="animate-spin" />
+                      {inst === "installing"
+                        ? "Instalando…"
+                        : prog?.total
+                          ? `Baixando… ${Math.round((prog.downloaded / prog.total) * 100)}%`
+                          : prog
+                            ? `Baixando… ${fmtBytes(prog.downloaded)}`
+                            : "Baixando…"}
+                    </span>
+                  )}
+                  {selfUpdate && inst === "done" && (
+                    <Button variant="primary" size="sm" onClick={() => void relaunchApp()}>
+                      <RefreshCw size={14} />
+                      Reiniciar agora
+                    </Button>
+                  )}
+                  {(!selfUpdate || inst === "idle") && (
+                    <Button
+                      variant={selfUpdate ? "ghost" : "primary"}
+                      size="sm"
+                      onClick={openRelease}
+                    >
+                      <Download size={14} />
+                      {selfUpdate ? "Baixar manualmente" : "Baixar"}
+                    </Button>
+                  )}
                   {release.notes && (
                     <Button
                       variant="ghost"
@@ -259,6 +345,22 @@ export function Settings({ open, onClose }: { open: boolean; onClose: () => void
                     </Button>
                   )}
                 </div>
+                {selfUpdate && inst === "downloading" && prog?.total && (
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-inset">
+                    <div
+                      className="h-full bg-accent transition-[width]"
+                      style={{
+                        width: `${Math.round((prog.downloaded / prog.total) * 100)}%`,
+                      }}
+                    />
+                  </div>
+                )}
+                {selfUpdate && platform === "linux" && (
+                  <p className="mt-2 text-[11px] text-faint">
+                    No Linux a instalação automática funciona só no AppImage; em pacotes
+                    .deb/.rpm abre a página do release.
+                  </p>
+                )}
                 {showNotes && release.notes && (
                   <pre className="mt-2 max-h-48 overflow-auto rounded border border-line bg-surface p-2 text-[11px] leading-relaxed whitespace-pre-wrap text-muted">
                     {release.notes}
@@ -274,6 +376,16 @@ export function Settings({ open, onClose }: { open: boolean; onClose: () => void
                 </button>
               </div>
             )}
+
+            <label className="mt-3 flex items-center gap-2 text-xs text-muted">
+              <input
+                type="checkbox"
+                className="size-4 accent-[var(--color-accent)]"
+                checked={autoCheck}
+                onChange={(e) => setAutoCheck(e.currentTarget.checked)}
+              />
+              Verificar atualizações ao abrir o app
+            </label>
           </Section>
         </div>
       </div>

@@ -84,3 +84,107 @@ export async function getAppVersion(): Promise<string | null> {
     return null;
   }
 }
+
+// ---------- auto-update (tauri-plugin-updater) ----------
+// A detecção continua pela API do GitHub (fetchLatestRelease) — funciona no
+// build web e traz as notas. As funções abaixo só entram no passo de INSTALAR:
+// baixam o artefato assinado do release, conferem a assinatura e reiniciam.
+
+/** Handle de update do plugin (não-nulo). Só existe dentro do Tauri. */
+export type UpdateHandle = NonNullable<
+  Awaited<ReturnType<typeof import("@tauri-apps/plugin-updater").check>>
+>;
+
+export interface UpdateProgress {
+  /** bytes já baixados */
+  downloaded: number;
+  /** total em bytes, ou `null` quando o servidor não mandou Content-Length */
+  total: number | null;
+}
+
+export type UpdateErrorKind = "not-appimage" | "network" | "signature" | "unknown";
+
+/** Classifica o erro do updater numa categoria — puro, testado. */
+export function updateErrorKind(err: unknown): UpdateErrorKind {
+  const msg = (err instanceof Error ? err.message : String(err ?? "")).toLowerCase();
+  if (msg.includes("appimage")) return "not-appimage";
+  if (msg.includes("signature") || msg.includes("verify") || msg.includes("pubkey")) {
+    return "signature";
+  }
+  if (
+    msg.includes("network") ||
+    msg.includes("connect") ||
+    msg.includes("timed out") ||
+    msg.includes("timeout") ||
+    msg.includes("dns") ||
+    msg.includes("sending request") ||
+    msg.includes("error sending")
+  ) {
+    return "network";
+  }
+  return "unknown";
+}
+
+const UPDATE_ERROR_TEXT: Record<UpdateErrorKind, string> = {
+  "not-appimage":
+    "No Linux a atualização automática só funciona pelo AppImage. Baixe a nova versão na página do release.",
+  network: "Não deu para baixar a atualização (sem conexão?). Tente de novo mais tarde.",
+  signature: "A atualização baixada falhou na verificação de assinatura e foi descartada.",
+  unknown: "Não foi possível instalar a atualização. Baixe manualmente na página do release.",
+};
+
+/** Mensagem amigável para um erro do updater. */
+export function updateErrorMessage(err: unknown): string {
+  return UPDATE_ERROR_TEXT[updateErrorKind(err)];
+}
+
+/** A plataforma troca o binário no lugar? Tauri e não-macOS (Gatekeeper). */
+export async function canSelfUpdate(): Promise<boolean> {
+  if (!isTauri()) return false;
+  try {
+    const { platform } = await import("@tauri-apps/plugin-os");
+    return platform() !== "macos";
+  } catch {
+    return true;
+  }
+}
+
+/**
+ * Consulta o endpoint de updates assinado. `null` fora do Tauri ou quando não há
+ * versão nova / o `latest.json` ainda não foi publicado. Lança em erro real de
+ * rede/assinatura — o chamador trata com `updateErrorMessage`.
+ */
+export async function checkForUpdate(): Promise<UpdateHandle | null> {
+  if (!isTauri()) return null;
+  const { check } = await import("@tauri-apps/plugin-updater");
+  return await check();
+}
+
+/**
+ * Baixa e instala o update, repassando o progresso. Não reinicia — chame
+ * `relaunchApp()` quando o usuário confirmar. Lança em falha.
+ */
+export async function downloadAndInstallUpdate(
+  handle: UpdateHandle,
+  onProgress?: (p: UpdateProgress) => void,
+): Promise<void> {
+  let downloaded = 0;
+  let total: number | null = null;
+  await handle.downloadAndInstall((event) => {
+    if (event.event === "Started") {
+      total = event.data.contentLength ?? null;
+      onProgress?.({ downloaded: 0, total });
+    } else if (event.event === "Progress") {
+      downloaded += event.data.chunkLength;
+      onProgress?.({ downloaded, total });
+    } else if (event.event === "Finished") {
+      onProgress?.({ downloaded: total ?? downloaded, total });
+    }
+  });
+}
+
+/** Fecha e reabre o app (após um update instalado). */
+export async function relaunchApp(): Promise<void> {
+  const { relaunch } = await import("@tauri-apps/plugin-process");
+  await relaunch();
+}

@@ -175,6 +175,9 @@ jobs:
         uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # assina os artefatos do updater (.sig) — o latest.json final é montado no job publish
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: ${{ steps.ver.outputs.tag }}
           releaseName: ${{ steps.ver.outputs.tag }}
@@ -202,6 +205,8 @@ jobs:
         if: matrix.os == 'ubuntu-22.04'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: |
           set -euo pipefail
           v="${{ steps.ver.outputs.version }}"
@@ -235,6 +240,11 @@ jobs:
           ARCH=x86_64 /tmp/appimagetool --appimage-extract-and-run \
             "DevTool-${v}" "$(basename "$appimage")"
           gh release upload "$tag" "$(basename "$appimage")" --clobber
+
+          # o .sig do tauri-action é do AppImage ORIGINAL; o reempacotado precisa
+          # de assinatura nova senão o updater rejeita o download no Linux.
+          npx --yes tauri signer sign "$(basename "$appimage")"
+          gh release upload "$tag" "$(basename "$appimage").sig" --clobber
 
   # 3) só quando os 3 bundles terminaram: notas + SHA256SUMS + publica o rascunho
   publish:
@@ -273,18 +283,57 @@ jobs:
             gh release edit "$tag" --notes-file /tmp/notes.md
           fi
 
-          # SHA256SUMS.txt a partir dos assets já anexados
           tmp=$(mktemp -d); cd "$tmp"
           gh release download "$tag"
+
+          # o updater (createUpdaterArtifacts + assinatura) entrou na v1.9.0 —
+          # rebuild via workflow_dispatch de tag anterior não gera .sig/latest.json.
+          ver="${tag#v}"
+          need_updater=1
+          if [ "$(printf '%s\n1.9.0\n' "$ver" | sort -V | head -1)" != "1.9.0" ]; then
+            need_updater=0
+          fi
+
+          if [ "$need_updater" = 1 ]; then
+            # latest.json do updater — montado aqui (não no tauri-action) pra não
+            # depender da ordem/merge da matriz e pra pegar o .sig do AppImage
+            # reempacotado. Chaves só das plataformas com artefato assinado.
+            base="https://github.com/${GH_REPO}/releases/download/${tag}"
+            appimage=$(ls *_amd64.AppImage 2>/dev/null | head -1 || true)
+            nsis=$(ls *_x64-setup.exe 2>/dev/null | head -1 || true)
+            macapp=$(ls *.app.tar.gz 2>/dev/null | head -1 || true)
+            jq -n --arg v "$ver" --arg d "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg n "${NOTES:-}" \
+              '{version:$v, pub_date:$d, notes:$n, platforms:{}}' > latest.json
+            add_platform() {  # $1=chave  $2=arquivo
+              [ -n "$2" ] && [ -f "$2.sig" ] || return 0
+              local j; j=$(mktemp)
+              jq --arg k "$1" --arg url "$base/$2" --rawfile s "$2.sig" \
+                '.platforms[$k]={signature:($s|rtrimstr("\n")), url:$url}' latest.json > "$j"
+              mv "$j" latest.json
+            }
+            add_platform "linux-x86_64"   "$appimage"
+            add_platform "windows-x86_64" "$nsis"
+            add_platform "darwin-x86_64"  "$macapp"
+            add_platform "darwin-aarch64" "$macapp"
+            cat latest.json
+            if [ "$(jq '.platforms | length' latest.json)" -lt 2 ]; then
+              echo "::error::latest.json com menos de 2 plataformas — updater incompleto"; exit 1
+            fi
+            gh release upload "$tag" latest.json --clobber
+          fi
+
+          # SHA256SUMS.txt a partir dos assets já anexados (inclui latest.json + .sig)
           rm -f SHA256SUMS.txt
           sha256sum * > SHA256SUMS.txt
           gh release upload "$tag" SHA256SUMS.txt --clobber
 
-          # confere que os 9 bundles das 3 plataformas chegaram
+          # confere que os 9 bundles das 3 plataformas chegaram (+ updater na v1.9.0+)
+          pats="*.rpm *_amd64.deb *.AppImage *_linux-x64_portable.tar.gz *_universal.dmg *universal.app.tar.gz *_x64-setup.exe *_x64_en-US.msi *_windows-x64_portable.zip"
+          if [ "$need_updater" = 1 ]; then
+            pats="$pats latest.json *_amd64.AppImage.sig *_x64-setup.exe.sig"
+          fi
           missing=""
-          for pat in "*.rpm" "*_amd64.deb" "*.AppImage" "*_linux-x64_portable.tar.gz" \
-                     "*_universal.dmg" "*universal.app.tar.gz" \
-                     "*_x64-setup.exe" "*_x64_en-US.msi" "*_windows-x64_portable.zip"; do
+          for pat in $pats; do
             ls $pat >/dev/null 2>&1 || missing="$missing $pat"
           done
           if [ -n "$missing" ]; then

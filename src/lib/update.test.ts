@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { compareSemver, isNewer, parseRelease } from "./update";
+import {
+  compareSemver,
+  isNewer,
+  parseRelease,
+  updateErrorKind,
+  updateErrorMessage,
+} from "./update";
 
 describe("compareSemver", () => {
   it("iguais → 0 (com e sem prefixo v)", () => {
@@ -56,5 +62,33 @@ describe("parseRelease", () => {
   it("lança sem tag", () => {
     expect(() => parseRelease({})).toThrow();
     expect(() => parseRelease(null)).toThrow();
+  });
+});
+
+describe("updateErrorKind", () => {
+  it("detecta AppImage ausente", () => {
+    expect(updateErrorKind(new Error("App is not an AppImage bundle"))).toBe("not-appimage");
+  });
+  it("detecta falha de assinatura", () => {
+    expect(updateErrorKind(new Error("failed to verify signature"))).toBe("signature");
+    expect(updateErrorKind("invalid pubkey")).toBe("signature");
+  });
+  it("detecta erro de rede", () => {
+    expect(updateErrorKind(new Error("error sending request for url"))).toBe("network");
+    expect(updateErrorKind(new Error("connection timed out"))).toBe("network");
+  });
+  it("cai em unknown quando não reconhece", () => {
+    expect(updateErrorKind(new Error("something else entirely"))).toBe("unknown");
+    expect(updateErrorKind(undefined)).toBe("unknown");
+  });
+  it("updateErrorMessage sempre devolve texto não-vazio", () => {
+    for (const e of [
+      new Error("not an AppImage"),
+      new Error("signature"),
+      new Error("network"),
+      new Error("?"),
+    ]) {
+      expect(updateErrorMessage(e).length).toBeGreaterThan(0);
+    }
   });
 });

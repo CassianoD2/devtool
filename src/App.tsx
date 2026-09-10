@@ -12,7 +12,12 @@ import { useLocalStorage } from "./hooks/useLocalStorage";
 import { useTheme } from "./hooks/useTheme";
 import { useClipboardDetect } from "./hooks/useClipboardDetect";
 import type { Suggestion } from "./lib/detect";
-import { getAppVersion, isNewer, type ReleaseInfo } from "./lib/update";
+import {
+  fetchLatestRelease,
+  getAppVersion,
+  isNewer,
+  type ReleaseInfo,
+} from "./lib/update";
 import { TOOLS, TOOLS_BY_ID } from "./tools/registry";
 
 function App() {
@@ -26,12 +31,37 @@ function App() {
   const { hit, check, dismiss } = useClipboardDetect();
   const { dark, setTheme } = useTheme();
 
-  const [foundRelease] = useLocalStorage<ReleaseInfo | null>("devtool:updates:release", null);
+  const [foundRelease, setFoundRelease] = useLocalStorage<ReleaseInfo | null>(
+    "devtool:updates:release",
+    null,
+  );
   const [appVer, setAppVer] = useState<string | null>(null);
   useEffect(() => {
     getAppVersion().then(setAppVer);
   }, []);
   const hasUpdate = !!foundRelease && !!appVer && isNewer(foundRelease.version, appVer);
+
+  // Verificação opt-in ao abrir o app (Configurações → "Verificar ao abrir"),
+  // no máximo 1×/dia. Só popula devtool:updates:release — o ponto no menu e o
+  // banner das Configurações reaproveitam esse estado. Nada é baixado aqui.
+  const [autoCheck] = useLocalStorage("devtool:updates:autocheck", false);
+  useEffect(() => {
+    if (!autoCheck) return;
+    const KEY = "devtool:updates:lastAutoCheck";
+    if (Date.now() - Number(localStorage.getItem(KEY) || 0) < 24 * 3600_000) return;
+    let cancelled = false;
+    fetchLatestRelease()
+      .then(async (rel) => {
+        if (cancelled) return;
+        localStorage.setItem(KEY, String(Date.now()));
+        const v = await getAppVersion();
+        if (!cancelled && v && isNewer(rel.version, v)) setFoundRelease(rel);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [autoCheck, setFoundRelease]);
 
   const [favorites, setFavorites] = useLocalStorage<string[]>("devtool:favorites", []);
   const toggleFavorite = useCallback(
