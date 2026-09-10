@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/cassianod2/devtool/compare/v1.8.0...v1.9.0) (2026-09-10)
+
+
+### Features
+
+* auto-update assinado via tauri-plugin-updater (Windows NSIS + Linux AppImage) ([7bf84f3](https://github.com/cassianod2/devtool/commit/7bf84f3267fea624ea1d5ea158216e64571671bf))
+
 # [1.8.0](https://github.com/cassianod2/devtool/compare/v1.7.0...v1.8.0) (2026-09-10)
 
 
