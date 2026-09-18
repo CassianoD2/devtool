@@ -1,3 +1,10 @@
+## [1.9.1](https://github.com/cassianod2/devtool/compare/v1.9.0...v1.9.1) (2026-09-18)
+
+
+### Bug Fixes
+
+* persistir params desabilitados e última resposta no API Client ([f87a0fd](https://github.com/cassianod2/devtool/commit/f87a0fd030359eeee40bf5856bf01f8a7a22f382))
+
 # [1.9.0](https://github.com/cassianod2/devtool/compare/v1.8.0...v1.9.0) (2026-09-10)
 
 
