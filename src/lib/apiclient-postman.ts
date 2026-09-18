@@ -15,6 +15,7 @@ import {
   type RequestAuth,
   type RequestSpec,
 } from "./apiclient-model";
+import { paramsFromUrl } from "./apiclient";
 
 function str(x: unknown, fallback = ""): string {
   return typeof x === "string" ? x : fallback;
@@ -118,12 +119,14 @@ function mapBody(raw: unknown): RequestSpec["body"] {
 function mapRequest(item: Record<string, unknown>, folderId: string | null): RequestSpec {
   const req = isObj(item.request) ? item.request : {};
   const now = Date.now();
+  const url = mapUrl(req.url);
   return {
     id: uid(),
     name: str(item.name) || str(req.method, "GET") || "Sem nome",
     folderId,
     method: str(req.method, "GET").toUpperCase() || "GET",
-    url: mapUrl(req.url),
+    url,
+    params: paramsFromUrl(url),
     headers: toKV(req.header).length
       ? toKV(req.header)
       : [{ id: uid(), key: "", value: "", enabled: true }],

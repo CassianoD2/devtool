@@ -67,6 +67,12 @@ export function setQueryParams(
   return (q ? `${path}?${q}` : path) + (hash ? `#${hash}` : "");
 }
 
+/** Linhas de KV a partir da query string de `url` (para popular a aba Params). */
+export function paramsFromUrl(url: string): KV[] {
+  const rows = getQueryParams(url).map((p) => ({ ...emptyKV(), ...p }));
+  return rows.length ? rows : [emptyKV()];
+}
+
 // ---------- multipart ----------
 
 /**
@@ -155,6 +161,7 @@ export function specFromParsed(p: ParsedRequest, name = ""): RequestSpec {
   spec.name = name;
   spec.method = p.method;
   spec.url = p.url;
+  spec.params = paramsFromUrl(p.url);
   spec.headers = p.headers.length
     ? p.headers.map(([key, value]) => ({ id: uid(), key, value, enabled: true }))
     : [emptyKV()];

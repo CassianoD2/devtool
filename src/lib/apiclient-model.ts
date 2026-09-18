@@ -66,6 +66,8 @@ export interface RequestSpec {
   folderId: string | null;
   method: string;
   url: string;
+  /** Espelha a query string de `url`, mas preserva linhas desabilitadas/em branco. */
+  params: KV[];
   headers: KV[];
   auth: RequestAuth;
   body: RequestBody;
@@ -151,6 +153,7 @@ export function emptyRequest(folderId: string | null = null): RequestSpec {
     folderId,
     method: "GET",
     url: "",
+    params: [emptyKV()],
     headers: [emptyKV()],
     auth: emptyAuth(),
     body: { mode: "none", text: "", form: [emptyKV()], multipart: [emptyMultipartField()] },

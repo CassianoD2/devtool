@@ -31,6 +31,11 @@ describe("apiclient-model factories", () => {
     expect(r.createdAt).toBe(r.updatedAt);
   });
 
+  it("emptyRequest starts with one blank params row, like headers", () => {
+    const r = emptyRequest();
+    expect(r.params).toEqual([{ id: r.params[0].id, key: "", value: "", enabled: true }]);
+  });
+
   it("emptyRequest honours a folderId argument", () => {
     expect(emptyRequest("f1").folderId).toBe("f1");
   });

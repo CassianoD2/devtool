@@ -17,6 +17,7 @@ import {
   type KV,
   type RequestSpec,
 } from "./apiclient-model";
+import { paramsFromUrl } from "./apiclient";
 
 export const STORE_KEY = "devtool:apiclient:store";
 export const LEGACY_KEYS = [
@@ -70,12 +71,14 @@ export function normalizeRequest(raw: unknown, folderId: string | null = null): 
   const mode = ["none", "json", "text", "form", "multipart"].includes(str(bodyRaw.mode))
     ? (str(bodyRaw.mode) as RequestSpec["body"]["mode"])
     : "none";
+  const url = str(o.url);
   return {
     id: str(o.id) || uid(),
     name: str(o.name),
     folderId,
     method: str(o.method, "GET") || "GET",
-    url: str(o.url),
+    url,
+    params: Array.isArray(o.params) ? normalizeKVList(o.params) : paramsFromUrl(url),
     headers: normalizeKVList(o.headers),
     auth,
     body: {

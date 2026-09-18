@@ -5,7 +5,7 @@ import { useToast } from "../../components/ui/Toast";
 import { copyToClipboard } from "../../lib/clipboard";
 import { parseCurl, toCurl } from "../../lib/curl";
 import {
-  getQueryParams,
+  paramsFromUrl,
   setQueryParams,
   specFromParsed,
 } from "../../lib/apiclient";
@@ -47,27 +47,26 @@ export function RequestBuilder({
   const [importOpen, setImportOpen] = useState(false);
   const [importText, setImportText] = useState("");
 
-  // Params <-> URL: estado local para preservar identidade das linhas ao digitar.
-  const kvFromUrl = (url: string): KV[] => getQueryParams(url).map((p) => ({ ...emptyKV(), ...p }));
-  const [paramState, setParamState] = useState<KV[]>(() => kvFromUrl(req.url));
+  // Params <-> URL: `req.params` é a fonte de verdade (persiste linhas
+  // desabilitadas/em branco); a URL guarda só a versão filtrada e "limpa".
+  const paramRows = req.params ?? paramsFromUrl(req.url);
   const lastSyncedUrl = useRef(req.url);
   useEffect(() => {
     if (req.url !== lastSyncedUrl.current) {
-      setParamState(kvFromUrl(req.url));
       lastSyncedUrl.current = req.url;
+      update({ params: paramsFromUrl(req.url) });
     }
   }, [req.url]);
 
   function editParams(rows: KV[]) {
-    setParamState(rows);
     const url = setQueryParams(
       req.url,
       rows.filter((r) => r.enabled && r.key.trim()).map((r) => ({ key: r.key, value: r.value })),
     );
     lastSyncedUrl.current = url;
-    update({ url });
+    update({ url, params: rows });
   }
-  const paramCount = paramState.filter((r) => r.enabled && r.key.trim()).length;
+  const paramCount = paramRows.filter((r) => r.enabled && r.key.trim()).length;
   const headerCount = req.headers.filter((h) => h.enabled && h.key).length;
   const missing = missingVarNames(req, store);
 
@@ -174,7 +173,7 @@ export function RequestBuilder({
 
       <div className="min-h-0 flex-1 overflow-auto rounded-md border border-line p-2">
         {reqTab === "params" && (
-          <KVEditor rows={paramState} onChange={editParams} emptyRow={emptyKV} />
+          <KVEditor rows={paramRows} onChange={editParams} emptyRow={emptyKV} />
         )}
 
         {reqTab === "headers" && (

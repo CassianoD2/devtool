@@ -4,6 +4,7 @@ import {
   STORE_KEY,
   isApiClientStore,
   migrateLegacy,
+  normalizeRequest,
   readLegacy,
   runMigration,
 } from "./apiclient-migrate";
@@ -105,6 +106,24 @@ describe("apiclient-migrate", () => {
     ls.setItem("apiclient:saved", "{bad");
     expect(() => runMigration(ls)).not.toThrow();
     expect(readLegacy(ls)).toBeNull();
+  });
+
+  it("normalizeRequest derives params from url when absent (legacy data)", () => {
+    const r = normalizeRequest({ id: "s1", method: "GET", url: "https://a/b?x=1&y=2" });
+    expect(r.params.map((p) => [p.key, p.value])).toEqual([
+      ["x", "1"],
+      ["y", "2"],
+    ]);
+  });
+
+  it("normalizeRequest preserves an explicit params array", () => {
+    const r = normalizeRequest({
+      id: "s1",
+      method: "GET",
+      url: "https://a/b",
+      params: [{ id: "p1", key: "unused", value: "", enabled: false }],
+    });
+    expect(r.params).toEqual([{ id: "p1", key: "unused", value: "", enabled: false }]);
   });
 
   it("isApiClientStore rejects junk", () => {

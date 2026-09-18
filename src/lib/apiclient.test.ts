@@ -4,6 +4,7 @@ import {
   listVarNames,
   getQueryParams,
   setQueryParams,
+  paramsFromUrl,
   toSendable,
   specFromParsed,
   emptyRequest,
@@ -50,6 +51,23 @@ describe("query params <-> url", () => {
     expect(setQueryParams("https://x", [{ key: "u", value: "{{base}}" }])).toBe(
       "https://x?u={{base}}",
     );
+  });
+});
+
+describe("paramsFromUrl", () => {
+  it("returns a single blank row when the url has no query string", () => {
+    const rows = paramsFromUrl("https://x/y");
+    expect(rows).toHaveLength(1);
+    expect(rows[0].key).toBe("");
+    expect(rows[0].enabled).toBe(true);
+  });
+
+  it("maps each query pair to an enabled row", () => {
+    const rows = paramsFromUrl("https://x/y?a=1&b=hello%20world");
+    expect(rows.map((r) => [r.key, r.value, r.enabled])).toEqual([
+      ["a", "1", true],
+      ["b", "hello world", true],
+    ]);
   });
 });
 
@@ -153,5 +171,13 @@ describe("specFromParsed", () => {
     expect(spec.headers.find((h) => h.key === "Accept")?.value).toBe("application/json");
     expect(spec.body.mode).toBe("json");
     expect(spec.body.text).toBe('{"n":1}');
+  });
+
+  it("derives params from the imported url's query string", () => {
+    const spec = specFromParsed(parseCurl(`curl https://x/1?a=1&b=2`));
+    expect(spec.params.map((p) => [p.key, p.value])).toEqual([
+      ["a", "1"],
+      ["b", "2"],
+    ]);
   });
 });

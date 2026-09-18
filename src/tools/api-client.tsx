@@ -28,17 +28,43 @@ const DEFAULT_UI: UiState = {
   bodyView: "pretty",
 };
 
+/** Último resultado exibido (não vai no `ApiClientStore` versionado — corpo pode ser grande). */
+interface LastResult {
+  requestId: string;
+  response: HttpResult | null;
+  error: string | null;
+}
+
+/** Acima disso não persiste o corpo (evita estourar a quota do localStorage). */
+const MAX_PERSIST_SIZE = 2_000_000;
+
 export function ApiClientWorkspace() {
   const actions = useApiClientStore();
   const { store } = actions;
   const [ui, setUi] = useLocalStorage<UiState>("devtool:apiclient:ui", DEFAULT_UI);
-
-  const [response, setResponse] = useState<HttpResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [sending, setSending] = useState(false);
+  const [lastResult, setLastResult] = useLocalStorage<LastResult | null>(
+    "devtool:apiclient:lastresult",
+    null,
+  );
 
   const openReq =
     store.requests.find((r) => r.id === ui.openRequestId) ?? store.requests[0] ?? null;
+
+  const [response, setResponse] = useState<HttpResult | null>(() =>
+    lastResult && openReq && lastResult.requestId === openReq.id ? lastResult.response : null,
+  );
+  const [error, setError] = useState<string | null>(() =>
+    lastResult && openReq && lastResult.requestId === openReq.id ? lastResult.error : null,
+  );
+  const [sending, setSending] = useState(false);
+
+  function persistResult(requestId: string, res: HttpResult | null, err: string | null) {
+    if (res && res.size > MAX_PERSIST_SIZE) {
+      setLastResult(null); // corpo grande demais — não persiste, some após reload
+      return;
+    }
+    setLastResult({ requestId, response: res, error: err });
+  }
 
   const patchUi = useCallback(
     (p: Partial<UiState>) => setUi((prev) => ({ ...prev, ...p })),
@@ -47,11 +73,16 @@ export function ApiClientWorkspace() {
 
   const openRequest = useCallback(
     (id: string) => {
-      setResponse(null);
-      setError(null);
+      if (lastResult && lastResult.requestId === id) {
+        setResponse(lastResult.response);
+        setError(lastResult.error);
+      } else {
+        setResponse(null);
+        setError(null);
+      }
       patchUi({ openRequestId: id });
     },
-    [patchUi],
+    [patchUi, lastResult],
   );
 
   const toggleExpand = useCallback(
@@ -72,6 +103,7 @@ export function ApiClientWorkspace() {
     try {
       const res = await sendRequest(resolveSpec(openReq, store));
       setResponse(res);
+      persistResult(openReq.id, res, null);
       actions.pushHistory(
         emptyHistoryEntry(openReq, {
           status: res.status,
@@ -85,6 +117,7 @@ export function ApiClientWorkspace() {
       setResponse(null);
       const msg = (err as Error).message;
       setError(msg);
+      persistResult(openReq.id, null, msg);
       actions.pushHistory(emptyHistoryEntry(openReq, null, msg));
     } finally {
       setSending(false);
