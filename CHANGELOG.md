@@ -1,3 +1,10 @@
+## [1.9.3](https://github.com/cassianod2/devtool/compare/v1.9.2...v1.9.3) (2026-09-30)
+
+
+### Bug Fixes
+
+* liberar URLs com porta e path no escopo do plugin HTTP ([28dc1c8](https://github.com/cassianod2/devtool/commit/28dc1c84dfa9fb7f670a0421afb07440dcc044fa))
+
 ## [1.9.2](https://github.com/cassianod2/devtool/compare/v1.9.1...v1.9.2) (2026-09-30)
 
 
