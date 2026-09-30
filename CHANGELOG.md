@@ -1,3 +1,10 @@
+## [1.9.2](https://github.com/cassianod2/devtool/compare/v1.9.1...v1.9.2) (2026-09-30)
+
+
+### Bug Fixes
+
+* mostrar mensagem real quando o request falha no API Client ([3d54966](https://github.com/cassianod2/devtool/commit/3d54966c395539865b7da55cf71127b893f73aab))
+
 ## [1.9.1](https://github.com/cassianod2/devtool/compare/v1.9.0...v1.9.1) (2026-09-18)
 
 
