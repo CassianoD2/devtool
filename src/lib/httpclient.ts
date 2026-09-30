@@ -13,6 +13,15 @@ export interface HttpResult {
   size: number;
 }
 
+/** O plugin HTTP do Tauri rejeita com string (não Error); normaliza para uma mensagem legível. */
+export function describeFetchError(err: unknown, url: string): string {
+  const raw =
+    typeof err === "string" ? err : err instanceof Error ? err.message : err ? JSON.stringify(err) : "";
+  const detail = raw || "erro desconhecido";
+  const refused = /refused|ECONNREFUSED|os error 111|10061/i.test(detail);
+  return refused ? `${detail}\nConexão recusada: nada está escutando em ${url}. O servidor está rodando?` : detail;
+}
+
 /** Dispara a requisição analisada. Usa o plugin HTTP do Tauri (sem CORS). */
 export async function sendRequest(req: ParsedRequest): Promise<HttpResult> {
   const doFetch = isTauri() ? tauriFetch : window.fetch.bind(window);
@@ -48,7 +57,7 @@ export async function sendRequest(req: ParsedRequest): Promise<HttpResult> {
     if (err instanceof DOMException && err.name === "AbortError") {
       throw new Error(`Tempo esgotado após ${req.timeoutMs} ms.`);
     }
-    throw err;
+    throw new Error(describeFetchError(err, req.url));
   }
   if (timer) clearTimeout(timer);
   const body = await res.text();
