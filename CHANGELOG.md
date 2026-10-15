@@ -1,3 +1,10 @@
+## [1.9.4](https://github.com/cassianod2/devtool/compare/v1.9.3...v1.9.4) (2026-10-15)
+
+
+### Bug Fixes
+
+* usar wildcard de porta no escopo do plugin HTTP ([b7ebe2b](https://github.com/cassianod2/devtool/commit/b7ebe2b98eca65bbfff1a54877e8c2a8afbaa3c6))
+
 ## [1.9.3](https://github.com/cassianod2/devtool/compare/v1.9.2...v1.9.3) (2026-09-30)
 
 
