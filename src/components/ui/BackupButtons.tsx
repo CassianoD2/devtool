@@ -8,12 +8,17 @@ import { useToast } from "./Toast";
 
 const NOTES_KEY = "devtool:notes";
 const TASKS_KEY = "devtool:tasks";
+const COLUMNS_KEY = "devtool:tasks:columns";
 const read = (k: string) => {
   try {
     return JSON.parse(localStorage.getItem(k) ?? "[]");
   } catch {
     return [];
   }
+};
+const readColumns = () => {
+  const c = read(COLUMNS_KEY);
+  return Array.isArray(c) && c.length > 0 ? c : undefined;
 };
 
 /** Exportar/Importar o "Pessoal" (notas + tarefas) num .json. Tudo local. */
@@ -22,7 +27,7 @@ export function BackupButtons() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   async function doExport() {
-    const json = exportBundle(read(NOTES_KEY), read(TASKS_KEY));
+    const json = exportBundle(read(NOTES_KEY), read(TASKS_KEY), readColumns());
     try {
       if (isTauri()) {
         const { save } = await import("@tauri-apps/plugin-dialog");
@@ -45,7 +50,7 @@ export function BackupButtons() {
 
   function applyBundle(json: string) {
     try {
-      const { notes, tasks } = parseBundle(json);
+      const { notes, tasks, columns } = parseBundle(json);
       if (
         !window.confirm(
           `Importar ${notes.length} nota(s) e ${tasks.length} tarefa(s)? Isso substitui as atuais.`,
@@ -54,6 +59,8 @@ export function BackupButtons() {
         return;
       localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
       localStorage.setItem(TASKS_KEY, JSON.stringify(tasks));
+      if (columns) localStorage.setItem(COLUMNS_KEY, JSON.stringify(columns));
+      else localStorage.removeItem(COLUMNS_KEY);
       window.location.reload();
     } catch (err) {
       toast((err as Error).message, "error");

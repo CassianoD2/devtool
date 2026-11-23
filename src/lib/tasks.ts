@@ -12,7 +12,25 @@ export interface Task {
   timeByDay: Record<string, number>;
   /** epoch ms de quando o cronômetro foi iniciado; ausente = parado */
   runningSince?: number;
+  /** descrição do cartão (visão Quadro) */
   note?: string;
+  /** coluna do quadro; ausente/inexistente = derivada de `done` */
+  columnId?: string;
+  /** posição dentro da coluna */
+  order?: number;
+  priority?: Priority;
+  labels?: string[];
+  /** prazo, "YYYY-MM-DD" */
+  due?: string;
+  checklist?: ChecklistItem[];
+}
+
+export type Priority = "low" | "medium" | "high";
+
+export interface ChecklistItem {
+  id: string;
+  text: string;
+  done: boolean;
 }
 
 const DAY_MS = 86_400_000;
@@ -102,6 +120,10 @@ function addTimeMaps(
 }
 
 /** Encerra o cronômetro de uma tarefa e credita o tempo decorrido por dia. */
+export function bankTask(task: Task, now: number): Task {
+  return bank(task, now);
+}
+
 function bank(task: Task, now: number): Task {
   if (task.runningSince == null) return task;
   return {

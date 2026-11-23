@@ -48,3 +48,19 @@ describe("backup", () => {
     expect(t).toHaveLength(1);
   });
 });
+
+describe("colunas do quadro no backup", () => {
+  const cols = [
+    { id: "a", title: "A" },
+    { id: "z", title: "Z", done: true },
+  ];
+  it("ida e volta preserva as colunas", () => {
+    expect(parseBundle(exportBundle([], [], cols)).columns).toEqual(cols);
+  });
+  it("backup antigo (sem colunas) continua válido", () => {
+    expect(parseBundle(exportBundle([], [])).columns).toBeUndefined();
+  });
+  it("colunas sem uma aberta e uma concluída são descartadas", () => {
+    expect(parseBundle(exportBundle([], [], [{ id: "a", title: "A" }])).columns).toBeUndefined();
+  });
+});

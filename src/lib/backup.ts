@@ -1,5 +1,6 @@
 import type { Note } from "./notes";
 import type { Task } from "./tasks";
+import type { Column } from "./kanban";
 
 export const BACKUP_VERSION = 1;
 
@@ -10,9 +11,11 @@ export interface PersonalBundle {
   exportedAt: string;
   notes: Note[];
   tasks: Task[];
+  /** colunas do quadro; ausente em backups antigos */
+  columns?: Column[];
 }
 
-export function exportBundle(notes: Note[], tasks: Task[]): string {
+export function exportBundle(notes: Note[], tasks: Task[], columns?: Column[]): string {
   const bundle: PersonalBundle = {
     app: "devtool",
     kind: "personal",
@@ -20,6 +23,7 @@ export function exportBundle(notes: Note[], tasks: Task[]): string {
     exportedAt: new Date().toISOString(),
     notes,
     tasks,
+    ...(columns ? { columns } : {}),
   };
   return JSON.stringify(bundle, null, 2);
 }
@@ -29,7 +33,7 @@ export function suggestedFilename(): string {
 }
 
 /** Valida e extrai notes/tasks de um JSON exportado. Lança Error se inválido. */
-export function parseBundle(json: string): { notes: Note[]; tasks: Task[] } {
+export function parseBundle(json: string): { notes: Note[]; tasks: Task[]; columns?: Column[] } {
   let data: unknown;
   try {
     data = JSON.parse(json);
@@ -59,5 +63,12 @@ export function parseBundle(json: string): { notes: Note[]; tasks: Task[] } {
       typeof t.date === "string" &&
       typeof t.timeByDay === "object",
   );
-  return { notes, tasks };
+  const columns = Array.isArray(b.columns)
+    ? b.columns.filter(
+        (c): c is Column => !!c && typeof c.id === "string" && typeof c.title === "string",
+      )
+    : [];
+  // quadro sem coluna aberta ou sem concluída não renderiza: descarta e usa o padrão
+  const valid = columns.some((c) => !c.done) && columns.some((c) => c.done);
+  return { notes, tasks, ...(valid ? { columns } : {}) };
 }

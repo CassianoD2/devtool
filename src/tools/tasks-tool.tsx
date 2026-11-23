@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Check, ChevronLeft, ChevronRight, Pause, Play, Plus, Trash2 } from "lucide-react";
+import { BoardView } from "./tasks/BoardView";
 import { ToolBody } from "../components/ToolLayout";
 import { BackupButtons } from "../components/ui/BackupButtons";
 import { Button, Segmented } from "../components/ui/primitives";
@@ -43,7 +44,21 @@ const PERIODS: { value: Period; label: string }[] = [
   { value: "month", label: "Mês" },
 ];
 
+type View = "board" | "list";
+
+const VIEWS: { value: View; label: string }[] = [
+  { value: "board", label: "Quadro" },
+  { value: "list", label: "Lista" },
+];
+
+/** Tarefas: Quadro (estilo Trello) ou Lista (por dia/semana/mês, com cronômetro). */
 export function TasksTool() {
+  const [view, setView] = useLocalStorage<View>("devtool:tasks:view", "board");
+  const viewSwitch = <Segmented value={view} onChange={setView} options={VIEWS} />;
+  return view === "board" ? <BoardView viewSwitch={viewSwitch} /> : <TasksList viewSwitch={viewSwitch} />;
+}
+
+function TasksList({ viewSwitch }: { viewSwitch: ReactNode }) {
   const [tasks, setTasks] = useLocalStorage<Task[]>("devtool:tasks", []);
   const [period, setPeriod] = useLocalStorage<Period>("devtool:tasks:period", "day");
   const [viewDate, setViewDate] = useState(todayISO());
@@ -297,6 +312,7 @@ export function TasksTool() {
     <ToolBody
       toolbar={
         <>
+          {viewSwitch}
           <Segmented value={period} onChange={setPeriod} options={PERIODS} />
           <div className="flex items-center gap-1">
             <button
