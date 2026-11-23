@@ -1,3 +1,10 @@
+# [1.10.0](https://github.com/cassianod2/devtool/compare/v1.9.4...v1.10.0) (2026-11-23)
+
+
+### Features
+
+* Tarefas ganha visão Quadro estilo Trello ([89616c4](https://github.com/cassianod2/devtool/commit/89616c4dd16e1eff2bd05758800cb1b8cdfcc517))
+
 ## [1.9.4](https://github.com/cassianod2/devtool/compare/v1.9.3...v1.9.4) (2026-10-15)
 
 
