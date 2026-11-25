@@ -61,7 +61,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable # usa branch por design; sem SHA fixo
         with:
           components: rustfmt, clippy
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
         with:
           workspaces: src-tauri -> target
       - name: rustfmt
@@ -159,7 +159,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable # usa branch por design; sem SHA fixo
         with:
           targets: ${{ matrix.os == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
         with:
           workspaces: src-tauri -> target
       - name: Instalar dependências de sistema (Linux)
